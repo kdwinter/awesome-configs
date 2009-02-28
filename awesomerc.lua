@@ -20,7 +20,7 @@ require('beautiful')
 -- Notification library
 require('naughty')
 -- My own functions
-require('fabulous')
+require('functions')
 
 -- {{{1 Variables
 
@@ -128,7 +128,7 @@ batprogressbar:bar_properties_set('bat',
 batprogressbar.mouse_enter = function ()
     bat_detailedinfo = naughty.notify(
     {
-        text = fabulous.battery_info('BAT1', batprogressbar, 'popup'),
+        text = functions.battery('BAT1', batprogressbar, 'popup'),
         timeout = 0,
         hover_timeout = 0.5,
         width = 150
@@ -155,7 +155,7 @@ memprogressbar:bar_properties_set('mem',
 memprogressbar.mouse_enter = function ()
     mem_detailedinfo = naughty.notify(
     {
-        text = fabulous.mem_info(memprogressbar, 'popup'),
+        text = functions.memory(memprogressbar, 'popup'),
         timeout = 0,
         hover_timeout = 0.5,
         width = 100
@@ -407,7 +407,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = '.'..fabulous.set_fg(beautiful.fg_focus, layout)..'.'
+        layoutbox[screen].text = '.'..functions.set_fg(beautiful.fg_focus, layout)..'.'
     else
         layoutbox[screen].text = nil
     end
@@ -420,13 +420,13 @@ end)
 
 -- 20 seconds
 awful.hooks.timer.register(20, function ()
-    fabulous.battery_info('BAT1', batprogressbar, 'progressbar')
-    fabulous.mem_info(memprogressbar, 'progressbar')
+    functions.battery('BAT1', batprogressbar, 'progressbar')
+    functions.memory(memprogressbar, 'progressbar')
 end)
 
 -- 1 minute
 awful.hooks.timer.register(60, function ()
-    fabulous.clock_info('%B %d,', '%H:%M', clockbox)
+    functions.clock('%B %d,', '%H:%M', clockbox)
 end)
 
 io.stderr:write("\n\rAwesome loaded at "..os.date("%B %d, %H:%M").."\r\n\n")

@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- @file fabulous.lua
+-- @file functions.lua
 -- @author Gigamo &lt;gigamo@gmail.com&gt;
 -------------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@ local awful = require('awful')
 local beautiful = require('beautiful')
 local naughty = require('naughty')
 
-module('fabulous')
+module('functions')
 
 -- {{{1 Markup
 
@@ -42,13 +42,13 @@ end
 
 -- {{{1 Clock
 
-function clock_info(dateformat, timeformat, cwidget)
+function clock(dateformat, timeformat, cwidget)
     cwidget.text = spacer..set_fg(beautiful.fg_focus, os.date(dateformat))..spacer..os.date(timeformat)..spacer
 end
 
 -- {{{1 Battery
 
-function battery_info(adapter, bwidget, used_for)
+function battery(adapter, bwidget, used_for)
     local fcur = io.open('/sys/class/power_supply/'..adapter..'/charge_now')    
     local fcap = io.open('/sys/class/power_supply/'..adapter..'/charge_full')
     local fsta = io.open('/sys/class/power_supply/'..adapter..'/status')
@@ -86,7 +86,7 @@ end
 
 -- {{{1 Memory
 
-function mem_info(mwidget, used_for)
+function memory(mwidget, used_for)
     local f = io.open('/proc/meminfo')
 
     for line in f:lines() do
