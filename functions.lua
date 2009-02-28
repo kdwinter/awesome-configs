@@ -3,6 +3,11 @@
 -- @author Gigamo &lt;gigamo@gmail.com&gt;
 -------------------------------------------------------------------------------
 
+local beautiful = require('beautiful')
+local naughty = require('naughty')
+
+module('functions')
+
 -- {{{1 Markup
 
 function set_bg(bgcolor, text)
@@ -32,7 +37,7 @@ end
 -- {{{1 Clock
 
 function clock_info(dateformat, timeformat)
-    clockbox.text = spacer..set_fg(beautiful.fg_focus, os.date(dateformat))..spacer..os.date(timeformat)..spacer
+    return spacer..set_fg(beautiful.fg_focus, os.date(dateformat))..spacer..os.date(timeformat)..spacer
 end
 
 -- {{{1 Battery
@@ -51,7 +56,7 @@ function battery_info(adapter, used_for)
     local battery = math.floor(cur * 100 / cap)
 
     if used_for == 'progressbar' then
-        batprogressbar:bar_data_add('bat', tonumber(battery))
+        return tonumber(battery)
     elseif used_for == 'popup' then
         if sta:match('Unknown') then sta = 'A/C' end
         return 'Percent:'..spacer..battery.."%\n"..'State:'..spacer..sta
@@ -64,7 +69,7 @@ function battery_info(adapter, used_for)
             dir = '↯'
         end
 
-        batterywidget.text = spacer..dir..battery..'%'..spacer
+        return spacer..dir..battery..'%'..spacer
     end
 
     -- Naughtify me when battery gets really low
@@ -95,9 +100,8 @@ function mem_info(used_for)
     mem_in_use = mem_total - mem_free
     mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
-
     if used_for == 'progressbar' then
-        memprogressbar:bar_data_add('mem', tonumber(mem_usage_percentage))
+        return tonumber(mem_usage_percentage)
     elseif used_for == 'popup' then
         return 'Percent:'..spacer..mem_usage_percentage..'%'.."\n"..'Total:'..spacer..mem_in_use..'Mb'
     elseif used_for == 'textbox' then
@@ -105,6 +109,7 @@ function mem_info(used_for)
             mem_usage_percentage = set_fg('#FF6565', mem_usage_percentage)
             mem_in_use = set_fg('#FF6565', mem_in_use)
         end
-        mem.text = spacer..mem_usage_percentage..'%'..spacer..'('..mem_in_use..'M)'..spacer
+
+        return spacer..mem_usage_percentage..'%'..spacer..'('..mem_in_use..'M)'..spacer
     end
 end

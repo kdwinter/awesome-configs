@@ -406,7 +406,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = '.'..set_fg(beautiful.fg_focus, layout)..'.'
+        layoutbox[screen].text = '.'..functions.set_fg(beautiful.fg_focus, layout)..'.'
     else
         layoutbox[screen].text = nil
     end
@@ -419,13 +419,13 @@ end)
 
 -- 1 minute
 awful.hooks.timer.register(60, function ()
-    clock_info('%B %d,', '%H:%M')
+    clockwidget.text = functions.clock_info('%B %d,', '%H:%M')
 end, true)
 
 -- 20 seconds
 awful.hooks.timer.register(20, function()
-    battery_info('BAT1', 'progressbar')
-    mem_info('progressbar')
+    memprogressbar:bar_data_add('mem', functions.battery_info('BAT1', 'progressbar'))
+    memprogressbar:bar_data_add('bat', functions.mem_info('progressbar'))
 end, true)
 
 io.stderr:write("\n\rAwesome loaded at "..os.date("%B %d, %H:%M").."\r\n\n")
