@@ -20,7 +20,7 @@ require('beautiful')
 -- Notification library
 require('naughty')
 -- My own functions
-require('functions')
+require('fabulous')
 
 -- {{{1 Variables
 
@@ -42,14 +42,15 @@ local layouts =
 }
 
 local app_rules =
-{  -- Class        Instance        Name                Screen           Tag     Floating
-    { 'Firefox',   nil,            nil,                screen.count(),  2,      false },
-    { 'Firefox',   'Download',     nil,                nil,             nil,    true  },
-    { 'Firefox',   'Places',       nil,                nil,             nil,    true  },
-    { 'Firefox',   'Extension',    nil,                nil,             nil,    true  },
-    { 'MPlayer',   nil,            nil,                nil,             4,      true  },
-    { nil,         nil,            'VLC media player', nil,             4,      true  },
-    { nil,         'Spotify.exe',  'Spotify',          nil,             4,      true  }
+{  -- Class         Instance        Name                Screen          Tag     Floating
+    { 'xterm',      nil,            nil,                screen.count(), nil,    false }, 
+    { 'Firefox',    nil,            nil,                screen.count(), 2,      false },
+    { 'Firefox',    'Download',     nil,                nil,            nil,    true  },
+    { 'Firefox',    'Places',       nil,                nil,            nil,    true  },
+    { 'Firefox',    'Extension',    nil,                nil,            nil,    true  },
+    { 'MPlayer',    nil,            nil,                nil,            4,      true  },
+    { nil,          nil,            'VLC media player', nil,            4,      true  },
+    { nil,          'Spotify.exe',  'Spotify',          nil,            4,      true  }
 }
 
 -- {{{1 Tags
@@ -127,7 +128,7 @@ batprogressbar:bar_properties_set('bat',
 batprogressbar.mouse_enter = function ()
     bat_detailedinfo = naughty.notify(
     {
-        text = battery_info('BAT1', 'popup'),
+        text = fabulous.battery_info('BAT1', batprogressbar, 'popup'),
         timeout = 0,
         hover_timeout = 0.5,
         width = 150
@@ -154,7 +155,7 @@ memprogressbar:bar_properties_set('mem',
 memprogressbar.mouse_enter = function ()
     mem_detailedinfo = naughty.notify(
     {
-        text = mem_info('popup'),
+        text = fabulous.mem_info(memprogressbar, 'popup'),
         timeout = 0,
         hover_timeout = 0.5,
         width = 100
@@ -406,7 +407,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = '.'..functions.set_fg(beautiful.fg_focus, layout)..'.'
+        layoutbox[screen].text = '.'..fabulous.set_fg(beautiful.fg_focus, layout)..'.'
     else
         layoutbox[screen].text = nil
     end
@@ -417,15 +418,13 @@ awful.hooks.arrange.register(function (screen)
     end
 end)
 
--- 1 minute
-awful.hooks.timer.register(60, function ()
-    clockwidget.text = functions.clock_info('%B %d,', '%H:%M')
-end, true)
-
 -- 20 seconds
-awful.hooks.timer.register(20, function()
-    memprogressbar:bar_data_add('mem', functions.battery_info('BAT1', 'progressbar'))
-    memprogressbar:bar_data_add('bat', functions.mem_info('progressbar'))
-end, true)
+awful.hooks.timer.register(20, fabulous.battery_info('BAT1', batprogressbar, 'progressbar'), true)
+
+-- 1 minute
+awful.hooks.timer.register(60, fabulous.clock_info('%B %d,', '%H:%M', clockbox), true)
+
+-- 5 minutes
+awful.hooks.timer.register(300, fabulous.mem_info(memprogressbar, 'progressbar'), true)
 
 io.stderr:write("\n\rAwesome loaded at "..os.date("%B %d, %H:%M").."\r\n\n")
