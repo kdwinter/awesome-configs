@@ -1,0 +1,39 @@
+font                    = Terminus 8
+
+bg_normal               = #1E1E1E
+bg_focus                = #33525F
+bg_urgent               = #CF6060
+bg_minimize             = #1E1E1E
+ 
+fg_normal               = #DDDCDC
+fg_focus                = #C9C180
+fg_urgent               = #FFFFFF
+fg_minimize             = #666666
+
+border_width            = 1
+border_normal           = #1E1E1E
+border_focus            = #33525F
+border_marked           = #CF6060
+
+taglist_squares_sel     = /usr/share/awesome/themes/default/taglist/squarefw.png
+taglist_squares_unsel   = /usr/share/awesome/themes/default/taglist/squarew.png
+tasklist_floating_icon  = /usr/share/awesome/themes/default/tasklist/floatingw.png
+
+menu_submenu_icon       = /home/gig/.config/awesome/icons/submenu.png
+menu_height             = 15
+menu_width              = 100
+
+taglist_squares         = true
+titlebar_close_button   = false
+
+wallpaper_cmd           = awsetbg /home/gig/walls/diagonals.jpg
+
+layout_floating         = /usr/share/awesome/themes/default/layouts/floatingw.png
+layout_magnifier        = /home/gig/.config/awesome/icons/layouts/magnifier.png
+layout_max              = /home/gig/.config/awesome/icons/layouts/max.png
+layout_tilebottom       = /home/gig/.config/awesome/icons/layouts/tilebottom.png
+layout_tileleft         = /usr/share/awesome/themes/default/layouts/tileleftw.png
+layout_tile             = /home/gig/.config/awesome/icons/layouts/tile.png
+layout_tiletop          = /usr/share/awesome/themes/default/layouts/tiletopw.png
+
+awesome_icon            = /home/gig/.config/awesome/icons/awesome16.png
