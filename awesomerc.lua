@@ -419,12 +419,18 @@ awful.hooks.arrange.register(function (screen)
 end)
 
 -- 20 seconds
-awful.hooks.timer.register(20, fabulous.battery_info('BAT1', batprogressbar, 'progressbar'))
+awful.hooks.timer.register(20, function ()
+    fabulous.battery_info('BAT1', batprogressbar, 'progressbar')
+end)
 
 -- 1 minute
-awful.hooks.timer.register(60, fabulous.clock_info('%B %d,', '%H:%M', clockbox))
+awful.hooks.timer.register(60, function ()
+    fabulous.clock_info('%B %d,', '%H:%M', clockbox)
+end)
 
 -- 5 minutes
-awful.hooks.timer.register(300, fabulous.mem_info(memprogressbar, 'progressbar'))
+awful.hooks.timer.register(300, function ()
+    fabulous.mem_info(memprogressbar, 'progressbar')
+end)
 
 io.stderr:write("\n\rAwesome loaded at "..os.date("%B %d, %H:%M").."\r\n\n")
