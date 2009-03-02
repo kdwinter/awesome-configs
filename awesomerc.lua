@@ -28,7 +28,7 @@ local modkey = 'Mod4'
 local term = 'urxvtc'
 local browser = 'firefox'
 local music = "wine ~/.wine/drive_c/Program\\ Files/Spotify/spotify.exe"
-local theme_path = awful.util.getdir('config')..'/themes/bluish'
+local theme_path = awful.util.getdir('config')..'/themes/reddish'
 beautiful.init(theme_path)
 
 
@@ -43,6 +43,7 @@ local layouts =
 
 local app_rules =
 {  -- Class         Instance        Name                Screen          Tag     Floating
+    { 'xterm',      nil,            nil,                screen.count(), nil,    false }, 
     { 'Firefox',    nil,            nil,                screen.count(), 2,      false },
     { 'Firefox',    'Download',     nil,                nil,            nil,    true  },
     { 'Firefox',    'Places',       nil,                nil,            nil,    true  },
@@ -130,7 +131,7 @@ batprogressbar.mouse_enter = function ()
         text = functions.battery('BAT1', batprogressbar, 'popup'),
         timeout = 0,
         hover_timeout = 0.5,
-        width = 135
+        width = 150
     })
 end
 batprogressbar.mouse_leave = function () naughty.destroy(bat_detailedinfo) end
@@ -269,9 +270,9 @@ local globalkeys =
         promptbox[mouse.screen], awful.util.spawn,
         awful.completion.bash, awful.util.getdir('cache')..'/history')
     end),
-    key({                   }, '#121',  function () awful.util.spawn('rvol -t') end),
-    key({                   }, '#122',  function () awful.util.spawn('rvol -d 2') end),
-    key({                   }, '#123',  function () awful.util.spawn('rvol -i 2') end)
+    key({                   }, '#121',  function () awful.util.spawn('dvol -t') end),
+    key({                   }, '#122',  function () awful.util.spawn('dvol -d 2') end),
+    key({                   }, '#123',  function () awful.util.spawn('dvol -i 2') end)
 }
 
 local clientkeys =
@@ -387,7 +388,7 @@ awful.hooks.manage.register(function (c)
         c.screen = target_screen
         awful.client.movetotag(tags[target_screen][target_tag], c)
     end
- 
+
     client.focus = c
 
     c:keys(clientkeys)

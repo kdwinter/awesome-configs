@@ -5,14 +5,14 @@ bg_focus                = #222222
 bg_urgent               = #0066FF
 bg_minimize             = #222222
  
-fg_normal               = #B0B0B0
-fg_focus                = #3099DD
+fg_normal               = #DDDCDC
+fg_focus                = #FCE70D
 fg_urgent               = #FFFFFF
 fg_minimize             = #666666
 
 border_width            = 1
-border_normal           = #333333
-border_focus            = #666666
+border_normal           = #666666
+border_focus            = #D6156C
 border_marked           = #0066FF
 
 taglist_squares_sel     = /usr/share/awesome/themes/default/taglist/squarefw.png
@@ -26,7 +26,7 @@ menu_width              = 100
 taglist_squares         = true
 titlebar_close_button   = false
 
-wallpaper_cmd           = awsetbg /home/gig/walls/leopard.png
+wallpaper_cmd           = awsetbg /home/gig/walls/elfenlied.jpg
 
 layout_floating         = /usr/share/awesome/themes/default/layouts/floatingw.png
 layout_magnifier        = /home/gig/.config/awesome/icons/layouts/magnifier.png
