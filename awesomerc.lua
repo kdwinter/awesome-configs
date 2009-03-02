@@ -42,14 +42,14 @@ local layouts =
 }
 
 local app_rules =
-{  -- Class         Instance        Name                Screen          Tag     Floating
+{  -- Class         Instance        Title               Screen          Tag     Floating
     { 'Firefox',    nil,            nil,                screen.count(), 2,      false },
-    { 'Firefox',    'Download',     nil,                nil,            nil,    true  },
-    { 'Firefox',    'Places',       nil,                nil,            nil,    true  },
-    { 'Firefox',    'Extension',    nil,                nil,            nil,    true  },
-    { 'MPlayer',    nil,            nil,                nil,            4,      true  },
-    { nil,          nil,            'VLC media player', nil,            4,      true  },
-    { nil,          'Spotify.exe',  'Spotify',          nil,            4,      true  }
+    { 'Firefox',    'Download',     nil,                screen.count(), nil,    true  },
+    { 'Firefox',    'Places',       nil,                screen.count(), nil,    true  },
+    { 'Firefox',    'Extension',    nil,                screen.count(), nil,    true  },
+    { 'MPlayer',    nil,            nil,                screen.count(), 4,      true  },
+    { nil,          nil,            'VLC media player', screen.count(), 4,      true  },
+    { nil,          'Spotify.exe',  'Spotify',          screen.count(), 4,      true  }
 }
 
 -- {{{1 Tags
@@ -351,6 +351,8 @@ end)
 
 -- Gets executed when a new client appears
 awful.hooks.manage.register(function (c)
+    c:keys(clientkeys)
+
     if not startup and awful.client.focus.filter(c) then
         c.screen = mouse.screen
     end
@@ -363,8 +365,8 @@ awful.hooks.manage.register(function (c)
         button({ modkey            }, 3, awful.mouse.client.resize)
     })
 
-    c.border_width = beautiful.border_width
-    c.border_color = beautiful.border_normal
+    -- Prevent new clients from becoming master
+    awful.client.setslave(c)
 
     -- Check application->screen/tag mappings and floating state
     local target_screen
@@ -387,13 +389,25 @@ awful.hooks.manage.register(function (c)
         c.screen = target_screen
         awful.client.movetotag(tags[target_screen][target_tag], c)
     end
- 
+
+    -- Border behavior
+    if awful.client.floating.get(c) then
+        c.border_width = beautiful.border_width
+        c.border_color = beautiful.border_normal
+    else
+        local tiledclients = awful.client.tiled(mouse.screen)
+        if #tiledclients == 1 then
+            c.border_width = 0
+            c.border_color = beautiful.border_normal
+        else
+            for unused, current in pairs(tiledclients) do
+                current.border_width = beautiful.border_width
+                current.border_color = beautiful.border_normal
+            end
+        end
+    end
+
     client.focus = c
-
-    c:keys(clientkeys)
-
-    -- Prevent new clients from becoming master
-    awful.client.setslave(c)
 
     -- Inogre size hints usually given out by terminals (prevent gaps between windows)
     c.size_hints_honor = false
@@ -402,7 +416,19 @@ awful.hooks.manage.register(function (c)
     awful.placement.no_offscreen(c)
 end)
 
--- Gets exeucted when arranging the screen (as in, tag switch, new client, etc)
+awful.hooks.unmanage.register(function (c)
+    if not awful.client.floating.get(c) then
+      local tiledclients = awful.client.tiled(mouse.screen)
+      if #tiledclients == 1 then
+        for unused, current in pairs(tiledclients) do
+          current.border_width = 0
+          current.border_color = beautiful.border_normal
+        end
+      end
+    end
+end)
+
+-- Gets executed when arranging the screen (as in, tag switch, new client, etc)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
