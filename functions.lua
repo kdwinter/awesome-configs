@@ -119,3 +119,11 @@ function memory(mwidget, used_for)
         mwidget.text = spacer..mem_usage_percentage..'%'..spacer..'('..mem_in_use..'M)'..spacer
     end
 end
+
+-- {{{1 CPU
+
+function cpu(cpwidget)
+    local f = io.popen('cpuinfo'):read()
+
+    cpwidget.text = f
+end

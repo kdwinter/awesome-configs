@@ -43,13 +43,13 @@ local layouts =
 
 local app_rules =
 {  -- Class         Instance        Title               Screen          Tag     Floating
-    { 'Firefox',    nil,            nil,                screen.count(), 2,      false },
-    { 'Firefox',    'Download',     nil,                screen.count(), nil,    true  },
-    { 'Firefox',    'Places',       nil,                screen.count(), nil,    true  },
-    { 'Firefox',    'Extension',    nil,                screen.count(), nil,    true  },
-    { 'MPlayer',    nil,            nil,                screen.count(), 4,      true  },
-    { nil,          nil,            'VLC media player', screen.count(), 4,      true  },
-    { nil,          'Spotify.exe',  'Spotify',          screen.count(), 4,      true  }
+    { 'Firefox',    nil,            nil,                screen.count(), 2,      nil  },
+    { 'Firefox',    'Download',     nil,                screen.count(), nil,    true },
+    { 'Firefox',    'Places',       nil,                screen.count(), nil,    true },
+    { 'Firefox',    'Extension',    nil,                screen.count(), nil,    true },
+    { 'MPlayer',    nil,            nil,                screen.count(), 4,      true },
+    { nil,          nil,            'VLC media player', screen.count(), 4,      true },
+    { nil,          'Spotify.exe',  'Spotify',          screen.count(), 4,      true }
 }
 
 -- {{{1 Tags
@@ -107,6 +107,8 @@ local systray = widget({ type = 'systray', align = 'right' })
 spacer = ' '
 
 clockbox = widget({ type = 'textbox', align = 'right' })
+
+cpubox = widget({ type = 'textbox', align = 'right' })
 
 batprogressbar = widget({ type = 'progressbar', align = 'right' })
 batprogressbar.width = 9
@@ -209,6 +211,7 @@ for s = 1, screen.count() do
         layoutbox[s],
         promptbox[s],
         tasklist[s],
+        cpubox,
         clockbox,
         memprogressbar,
         batprogressbar,
@@ -369,42 +372,32 @@ awful.hooks.manage.register(function (c)
     awful.client.setslave(c)
 
     -- Check application->screen/tag mappings and floating state
-    local target_screen
-    local target_float = false
-    local target_tag   = awful.tag.selected(mouse.screen)
-    -- 1 = class, 2 = instance, 3 = title, 4 = screen, 5 = tag, 6 = [is] floating
+    local isfloat, isscreen, istag
     for index, rule in pairs(app_rules) do
-        if  (((rule[1] == nil) or (c.class    and c.class    == rule[1]))
-        and  ((rule[2] == nil) or (c.instance and c.instance == rule[2]))
-        and  ((rule[3] == nil) or string.find(c.name, rule[3], 1, true))) then
-            target_float = rule[6]
-            if rule[4] ~= nil then   target_screen = rule[4] end
-            if rule[5] ~= nil then   target_tag    = rule[5] end
+        if (((rule[1] == nil) or (c.class and c.class == rule[1]))
+        and ((rule[2] == nil) or (c.instance and c.instance == rule[2]))
+        and ((rule[3] == nil) or (c.name and string.find(c.name, rule[3], 1, true)))) then
+            isscreen = rule[4]
+            istag = rule[5]
+            isfloat = rule[6]
         end
     end
-    if target_float then
-        awful.client.floating.set(c, target_float)
-    end
-    if target_screen then
-        c.screen = target_screen
-        awful.client.movetotag(tags[target_screen][target_tag], c)
-    end
-
-    -- Border behavior
-    if awful.client.floating.get(c) then
-        c.border_width = beautiful.border_width
-        c.border_color = beautiful.border_normal
+ 
+    if isscreen then
+        awful.client.movetoscreen(c, isscreen)
+        c.screen = isscreen
     else
-        local tiledclients = awful.client.tiled(mouse.screen)
-        if #tiledclients == 1 then
-            c.border_width = 0
-            c.border_color = beautiful.border_normal
-        else
-            for unused, current in pairs(tiledclients) do
-                current.border_width = beautiful.border_width
-                current.border_color = beautiful.border_normal
-            end
-        end
+        isscreen = mouse.screen
+        c.screen = isscreen
+    end
+ 
+    if istag then
+        awful.client.movetotag(tags[isscreen][istag], c)
+        c.tag = istag
+    end
+ 
+    if isfloat then
+      awful.client.floating.set(c, isfloat)
     end
 
     client.focus = c
@@ -414,18 +407,6 @@ awful.hooks.manage.register(function (c)
 
     awful.placement.no_overlap(c)
     awful.placement.no_offscreen(c)
-end)
-
-awful.hooks.unmanage.register(function (c)
-    if not awful.client.floating.get(c) then
-      local tiledclients = awful.client.tiled(mouse.screen)
-      if #tiledclients == 1 then
-        for unused, current in pairs(tiledclients) do
-          current.border_width = 0
-          current.border_color = beautiful.border_normal
-        end
-      end
-    end
 end)
 
 -- Gets executed when arranging the screen (as in, tag switch, new client, etc)
@@ -441,6 +422,20 @@ awful.hooks.arrange.register(function (screen)
         local c = awful.client.focus.history.get(screen, 0)
         if c then client.focus = c end
     end
+
+    local tiledclients = awful.client.tiled(screen)
+    if (#tiledclients == 1) or (layout == 'max') then
+        tiledclients[1].border_width = 0
+    else
+        for unused, current in pairs(tiledclients) do
+            current.border_width = beautiful.border_width
+        end
+    end
+end)
+
+-- 5 seconds
+awful.hooks.timer.register(5, function ()
+    functions.cpu(cpubox)
 end)
 
 -- 20 seconds
