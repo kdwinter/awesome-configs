@@ -110,59 +110,9 @@ clockbox = widget({ type = 'textbox', align = 'right' })
 
 cpubox = widget({ type = 'textbox', align = 'right' })
 
-batprogressbar = widget({ type = 'progressbar', align = 'right' })
-batprogressbar.width = 9
-batprogressbar.height = 1
-batprogressbar.gap = 1
-batprogressbar.border_padding = 1
-batprogressbar.border_width = 0
-batprogressbar.ticks_count = 4
-batprogressbar.vertical = true
-batprogressbar:bar_properties_set('bat',
-{
-    bg = '#333333',
-    fg = beautiful.fg_focus,
-    border_color = '#888888',
-    min_value = 0,
-    max_value = 100
-})
-batprogressbar.mouse_enter = function ()
-    bat_detailedinfo = naughty.notify(
-    {
-        text = functions.battery('BAT1', batprogressbar, 'popup'),
-        timeout = 0,
-        hover_timeout = 0.5,
-        width = 135
-    })
-end
-batprogressbar.mouse_leave = function () naughty.destroy(bat_detailedinfo) end
+membox = widget({ type = 'textbox', align = 'right' })
 
-memprogressbar = widget({ type = 'progressbar', align = 'right' })
-memprogressbar.width = 9
-memprogressbar.height = 1
-memprogressbar.gap = 1
-memprogressbar.border_padding = 1
-memprogressbar.border_width = 0
-memprogressbar.ticks_count = 4
-memprogressbar.vertical = true
-memprogressbar:bar_properties_set('mem',
-{
-    bg = '#333333',
-    fg = beautiful.fg_focus,
-    border_color = '#888888',
-    min_value = 0,
-    max_value = 100 
-})
-memprogressbar.mouse_enter = function ()
-    mem_detailedinfo = naughty.notify(
-    {
-        text = functions.memory(memprogressbar, 'popup'),
-        timeout = 0,
-        hover_timeout = 0.5,
-        width = 100
-    })
-end
-memprogressbar.mouse_leave = function () naughty.destroy(mem_detailedinfo) end
+batbox = widget({ type = 'textbox', align = 'right' })
 
 taglist.buttons =
 {
@@ -212,9 +162,9 @@ for s = 1, screen.count() do
         promptbox[s],
         tasklist[s],
         cpubox,
+        membox,
+        batbox,
         clockbox,
-        memprogressbar,
-        batprogressbar,
         s == 1 and systray or nil
     }
     statusbar[s].screen = s
@@ -424,6 +374,7 @@ awful.hooks.arrange.register(function (screen)
     end
 
     local tiledclients = awful.client.tiled(screen)
+    if (#tiledclients == 0) then return end
     if (#tiledclients == 1) or (layout == 'max') then
         tiledclients[1].border_width = 0
     else
@@ -433,15 +384,17 @@ awful.hooks.arrange.register(function (screen)
     end
 end)
 
--- 5 seconds
-awful.hooks.timer.register(5, function ()
-    functions.cpu(cpubox)
-end)
+-- Runonce
+functions.clock('%B %d,', '%H:%M', clockbox)
+functions.cpu(cpubox)
+functions.battery('BAT1', batbox)
+functions.memory(membox)
 
 -- 20 seconds
 awful.hooks.timer.register(20, function ()
-    functions.battery('BAT1', batprogressbar, 'progressbar')
-    functions.memory(memprogressbar, 'progressbar')
+    functions.cpu(cpubox)
+    functions.battery('BAT1', batbox)
+    functions.memory(membox)
 end)
 
 -- 1 minute

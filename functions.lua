@@ -43,12 +43,12 @@ end
 -- {{{1 Clock
 
 function clock(dateformat, timeformat, cwidget)
-    cwidget.text = spacer..set_fg(beautiful.fg_focus, os.date(dateformat))..spacer..os.date(timeformat)..spacer
+    cwidget.text = spacer..os.date(dateformat)..spacer..set_fg(beautiful.fg_focus, os.date(timeformat))..spacer
 end
 
 -- {{{1 Battery
 
-function battery(adapter, bwidget, used_for)
+function battery(adapter, bwidget)
     local fcur = io.open('/sys/class/power_supply/'..adapter..'/charge_now')    
     local fcap = io.open('/sys/class/power_supply/'..adapter..'/charge_full')
     local fsta = io.open('/sys/class/power_supply/'..adapter..'/status')
@@ -61,22 +61,15 @@ function battery(adapter, bwidget, used_for)
     
     local battery = math.floor(cur * 100 / cap)
 
-    if used_for == 'progressbar' then
-        bwidget:bar_data_add('bat', tonumber(battery))
-    elseif used_for == 'popup' then
-        if sta:match('Unknown') then sta = 'A/C' end
-        return 'Percent:'..spacer..battery.."%\n"..'State:'..spacer..sta
-    elseif used_for == 'textbox' then
-        if sta:match('Charging') then
-            dir = '▲'
-        elseif sta:match('Discharging') then
-            dir = '▼'
-        else
-            dir = '↯'
-        end
-
-        bwidget.text = spacer..dir..battery..'%'..spacer
+    if sta:match('Charging') then
+        dir = '^'
+    elseif sta:match('Discharging') then
+        dir = 'v'
+    else
+        dir = '↯'
     end
+
+    bwidget.text = spacer..dir..battery..'%'..spacer..set_fg(beautiful.fg_focus, '|')
 
     -- Naughtify me when battery gets really low
     if tonumber(battery) <= 10 then
@@ -106,24 +99,25 @@ function memory(mwidget, used_for)
     mem_in_use = mem_total - mem_free
     mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
-    if used_for == 'progressbar' then
-        mwidget:bar_data_add('mem', tonumber(mem_usage_percentage))
-    elseif used_for == 'popup' then
-        return 'Percent:'..spacer..mem_usage_percentage.."%\n"..'Total:'..spacer..mem_in_use..'Mb'
-    elseif used_for == 'textbox' then
-        if tonumber(mem_usage_percentage) >= 15 and tonumber(mem_in_use) >= 306 then
-            mem_usage_percentage = set_fg('#FF6565', mem_usage_percentage)
-            mem_in_use = set_fg('#FF6565', mem_in_use)
-        end
-
-        mwidget.text = spacer..mem_usage_percentage..'%'..spacer..'('..mem_in_use..'M)'..spacer
-    end
+    mwidget.text = spacer..mem_in_use..'Mb'..spacer..set_fg(beautiful.fg_focus, '|')
 end
 
 -- {{{1 CPU
 
 function cpu(cpwidget)
-    local f = io.popen('cpuinfo'):read()
+    local temperature = 0
+    local howmany = 0
+    local f = io.popen('sensors')
+    
+    for line in f:lines() do
+        if line:match(':%s+%+([.%d]+)') then
+            howmany = howmany + 1
+            temperature = temperature + tonumber(line:match(':%s+%+([.%d]+)'))
+        end
+    end
+    f:close()
 
-    cpwidget.text = f
+    temperature = temperature / howmany
+
+    cpwidget.text = spacer..temperature..'°C'..spacer..set_fg(beautiful.fg_focus, '|')
 end
