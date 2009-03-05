@@ -49,31 +49,38 @@ end
 -- {{{1 Battery
 
 function battery(adapter, bwidget)
-    local fcur = io.open('/sys/class/power_supply/'..adapter..'/charge_now')    
-    local fcap = io.open('/sys/class/power_supply/'..adapter..'/charge_full')
-    local fsta = io.open('/sys/class/power_supply/'..adapter..'/status')
-    local cur = fcur:read()
-    fcur:close()
-    local cap = fcap:read()
-    fcap:close()
-    local sta = fsta:read()
-    fsta:close()
-    
-    local battery = math.floor(cur * 100 / cap)
+    local level = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage')
+    local discharging = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.rechargeable.is_discharging')
+    local charging = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.rechargeable.is_charging')
 
-    if sta:match('Charging') then
-        dir = '^'
-    elseif sta:match('Discharging') then
-        dir = 'v'
+    if level ~= nil then
+        charge = level:read()
+        level:close()
     else
-        dir = '↯'
+        charge = '?'
     end
 
-    bwidget.text = spacer..dir..battery..'%'..spacer..set_fg(beautiful.fg_focus, '|')
+    if discharging ~= nil and charging ~= nil then
+        discharging_state = discharging:read()
+        discharging:close()
+        charging_state = charging:read()
+        charging:close()
+        if discharging_state == 'true' then
+            dir = 'v'
+        elseif charging_state == 'true' then
+            dir = '^'
+        else
+            dir = '↯'
+        end
+    else
+        dir = '?'
+    end
+
+    bwidget.text = spacer..dir..charge..'%'..spacer..set_fg(beautiful.fg_focus, '|')
 
     -- Naughtify me when battery gets really low
-    if tonumber(battery) <= 10 then
-        naughty.notify({ text = 'Battery low!'..spacer..battery..'%'..spacer..'left!' })
+    if tonumber(charge) <= 10 then
+        naughty.notify({ text = 'Battery low!'..spacer..charge..'%'..spacer..'left!' })
     end
 end
 

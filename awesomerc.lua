@@ -2,7 +2,6 @@
 -- @file awesomerc.lua
 -- @author Gigamo &lt;gigamo@gmail.com&gt;
 -------------------------------------------------------------------------------
-
 -- {{{1 Tables
 
 local tags = { }
@@ -31,7 +30,6 @@ local music = "wine ~/.wine/drive_c/Program\\ Files/Spotify/spotify.exe"
 local theme_path = awful.util.getdir('config')..'/themes/bluish'
 beautiful.init(theme_path)
 
-
 local layouts =
 {
     awful.layout.suit.tile,
@@ -49,24 +47,23 @@ local app_rules =
     { 'Firefox',    'Extension',    nil,                screen.count(), nil,    true },
     { 'MPlayer',    nil,            nil,                screen.count(), 4,      true },
     { nil,          nil,            'VLC media player', screen.count(), 4,      true },
-    { nil,          'Spotify.exe',  'Spotify',          screen.count(), 4,      true }
+    { nil,          'spotify.exe',  'Spotify',          screen.count(), 4,      true }
 }
 
 -- {{{1 Tags
 
 local tag_properties =
 {
-    { name = '1', layout = layouts[1], mwfact = 0.618033988769 },
-    { name = '2', layout = layouts[3]                          },
-    { name = '3', layout = layouts[1]                          },
-    { name = '4', layout = layouts[1]                          },
-    { name = '5', layout = layouts[1]                          },
-    { name = '6', layout = layouts[1]                          },
-    { name = '7', layout = layouts[1]                          },
-    { name = '8', layout = layouts[1]                          },
-    { name = '9', layout = layouts[1]                          }
+    { name = '1.main',  layout = layouts[1], mwfact = 0.618033988769 },
+    { name = '2.web',   layout = layouts[3]                          },
+    { name = '3.dev',   layout = layouts[1]                          },
+    { name = '4.media', layout = layouts[1]                          },
+    { name = '5.misc',  layout = layouts[1]                          },
+    { name = '6',       layout = layouts[1]                          },
+    { name = '7',       layout = layouts[1]                          },
+    { name = '8',       layout = layouts[1]                          },
+    { name = '9',       layout = layouts[1]                          }
 }
-
 
 for s = 1, screen.count() do
     tags[s] = { }
@@ -221,6 +218,11 @@ local globalkeys =
         awful.prompt.run({ prompt = spacer..'Run:'..spacer },
         promptbox[mouse.screen], awful.util.spawn,
         awful.completion.bash, awful.util.getdir('cache')..'/history')
+    end),
+    key({ modkey }, 'F4', function ()
+        awful.prompt.run({ prompt = spacer..'Run Lua:'..spacer },
+        promptbox[mouse.screen], awful.util.eval,
+        awful.prompt.bash, awful.util.getdir('cache')..'/history_eval')
     end),
     key({                   }, '#121',  function () awful.util.spawn('rvol -t') end),
     key({                   }, '#122',  function () awful.util.spawn('rvol -d 2') end),
