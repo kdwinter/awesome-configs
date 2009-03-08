@@ -87,9 +87,9 @@ end
 -- {{{1 Memory
 
 function memory(mwidget, used_for)
-    local f = io.open('/proc/meminfo')
+    local memfile = io.open('/proc/meminfo')
 
-    for line in f:lines() do
+    for line in memfile:lines() do
         if line:match("^MemTotal.*") then
             mem_total = math.floor(tonumber(line:match("(%d+)")) / 1024)
         elseif line:match("^MemFree.*") then
@@ -100,7 +100,7 @@ function memory(mwidget, used_for)
             mem_cached = math.floor(tonumber(line:match("(%d+)")) / 1024)
         end
     end
-    f:close()
+    memfile:close()
 
     mem_free = mem_free + mem_buffers + mem_cached
     mem_in_use = mem_total - mem_free
@@ -114,15 +114,15 @@ end
 function cpu(cpwidget)
     local temperature = 0
     local howmany = 0
-    local f = io.popen('sensors')
+    local sensors = io.popen('sensors')
     
-    for line in f:lines() do
+    for line in sensors:lines() do
         if line:match(':%s+%+([.%d]+)') then
             howmany = howmany + 1
             temperature = temperature + tonumber(line:match(':%s+%+([.%d]+)'))
         end
     end
-    f:close()
+    sensors:close()
 
     temperature = temperature / howmany
 

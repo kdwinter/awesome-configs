@@ -54,15 +54,15 @@ local app_rules =
 
 local tag_properties =
 {
-    { name = '1.main',  layout = layouts[1], mwfact = 0.618033988769 },
-    { name = '2.web',   layout = layouts[3]                          },
-    { name = '3.dev',   layout = layouts[1]                          },
-    { name = '4.media', layout = layouts[1]                          },
-    { name = '5.misc',  layout = layouts[1]                          },
-    { name = '6',       layout = layouts[1]                          },
-    { name = '7',       layout = layouts[1]                          },
-    { name = '8',       layout = layouts[1]                          },
-    { name = '9',       layout = layouts[1]                          }
+    { name = '1.m', layout = layouts[1], mwfact = 0.618033988769 },
+    { name = '2.w', layout = layouts[3]                          },
+    { name = '3.d', layout = layouts[1]                          },
+    { name = '4',   layout = layouts[1]                          },
+    { name = '5',   layout = layouts[1]                          },
+    { name = '6',   layout = layouts[1]                          },
+    { name = '7',   layout = layouts[1]                          },
+    { name = '8',   layout = layouts[1]                          },
+    { name = '9',   layout = layouts[1]                          }
 }
 
 for s = 1, screen.count() do
@@ -102,6 +102,12 @@ local main_menu = awful.menu.new(
 local systray = widget({ type = 'systray', align = 'right' })
 
 spacer = ' '
+spsep = widget({ type = 'textbox', align = 'left' })
+spsep.text = spacer
+tlsep = widget({ type = 'imagebox', align = 'left' })
+tlsep.image = image(awful.util.getdir('config')..'/icons/sep.png')
+wisep = widget({ type = 'imagebox', align = 'right' })
+wisep.image = image(awful.util.getdir('config')..'/icons/sep.png')
 
 clockbox = widget({ type = 'textbox', align = 'right' })
 
@@ -137,12 +143,9 @@ for s = 1, screen.count() do
         button({ }, 4, function () awful.layout.inc(layouts, 1) end),
         button({ }, 5, function () awful.layout.inc(layouts, -1) end)
     })
-    taglist[s] = awful.widget.taglist.new(s, awful.widget.taglist.label.all, taglist.buttons)
+    taglist[s] = awful.widget.taglist.new(s, awful.widget.taglist.label.noempty, taglist.buttons)
     tasklist[s] = awful.widget.tasklist.new(function(c)
-        if c == client.focus and c ~= nil then 
-            return spacer..awful.util.escape(c.name)
-        end
-        -- return awful.widget.tasklist.label.currenttags(c, s)
+        return awful.widget.tasklist.label.currenttags(c, s)
     end, tasklist.buttons)
 
     statusbar[s] = wibox(
@@ -150,14 +153,20 @@ for s = 1, screen.count() do
         position = 'top',
         height = '14',
         fg = beautiful.fg_normal,
-        bg = beautiful.bg_normal
+        bg = beautiful.bg_normal,
+        border_width = beautiful.border_width,
+        border_color = beautiful.border_normal
     })
     statusbar[s].widgets =
     {
         taglist[s],
+        tlsep,
         layoutbox[s],
+        tlsep,
+        spsep,
         promptbox[s],
         tasklist[s],
+        wisep,
         cpubox,
         membox,
         batbox,
@@ -354,7 +363,7 @@ awful.hooks.manage.register(function (c)
 
     client.focus = c
 
-    -- Inogre size hints usually given out by terminals (prevent gaps between windows)
+    -- Ignore size hints usually given out by terminals (prevent gaps between windows)
     c.size_hints_honor = false
 
     awful.placement.no_overlap(c)
@@ -365,7 +374,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = '.'..functions.set_fg(beautiful.fg_focus, layout)..'.'
+        layoutbox[screen].text = spacer..'.'..functions.set_fg(beautiful.fg_focus, layout)..'.'..spacer
     else
         layoutbox[screen].text = nil
     end
@@ -382,6 +391,7 @@ awful.hooks.arrange.register(function (screen)
     else
         for unused, current in pairs(tiledclients) do
             current.border_width = beautiful.border_width
+            current:lower()
         end
     end
 end)
