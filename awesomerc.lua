@@ -41,6 +41,7 @@ local layouts =
 
 local app_rules =
 {  -- Class         Instance        Title               Screen          Tag     Floating
+    { 'xterm',      nil,            nil,                screen.count(), 9,      nil  },
     { 'Firefox',    nil,            nil,                screen.count(), 2,      nil  },
     { 'Firefox',    'Download',     nil,                screen.count(), nil,    true },
     { 'Firefox',    'Places',       nil,                screen.count(), nil,    true },
@@ -102,19 +103,11 @@ local main_menu = awful.menu.new(
 local systray = widget({ type = 'systray', align = 'right' })
 
 spacer = ' '
-spsep = widget({ type = 'textbox', align = 'left' })
-spsep.text = spacer
-tlsep = widget({ type = 'imagebox', align = 'left' })
-tlsep.image = image(awful.util.getdir('config')..'/icons/sep.png')
-wisep = widget({ type = 'imagebox', align = 'right' })
-wisep.image = image(awful.util.getdir('config')..'/icons/sep.png')
-
-clockbox = widget({ type = 'textbox', align = 'right' })
 
 cpubox = widget({ type = 'textbox', align = 'right' })
-
+loadbox = widget({ type = 'textbox', align = 'right' })
 membox = widget({ type = 'textbox', align = 'right' })
-
+clockbox = widget({ type = 'textbox', align = 'right' })
 batbox = widget({ type = 'textbox', align = 'right' })
 
 taglist.buttons =
@@ -151,26 +144,22 @@ for s = 1, screen.count() do
     statusbar[s] = wibox(
     {
         position = 'top',
-        height = '14',
+        height = '12',
         fg = beautiful.fg_normal,
         bg = beautiful.bg_normal,
-        border_width = beautiful.border_width,
-        border_color = beautiful.border_normal
     })
     statusbar[s].widgets =
     {
         taglist[s],
-        tlsep,
         layoutbox[s],
-        tlsep,
         spsep,
         promptbox[s],
         tasklist[s],
-        wisep,
         cpubox,
+        loadbox,
         membox,
-        batbox,
         clockbox,
+        batbox,
         s == 1 and systray or nil
     }
     statusbar[s].screen = s
@@ -224,12 +213,12 @@ local globalkeys =
     key({ modkey            }, 'space', function () awful.layout.inc(layouts, 1) end),
     key({ modkey, 'Shift'   }, 'space', function () awful.layout.inc(layouts, -1) end),
     key({ modkey }, 'r',function ()
-        awful.prompt.run({ prompt = spacer..'Run:'..spacer },
+        awful.prompt.run({ prompt = ' Run: ' },
         promptbox[mouse.screen], awful.util.spawn,
         awful.completion.bash, awful.util.getdir('cache')..'/history')
     end),
     key({ modkey }, 'F4', function ()
-        awful.prompt.run({ prompt = spacer..'Run Lua:'..spacer },
+        awful.prompt.run({ prompt = ' Run Lua: ' },
         promptbox[mouse.screen], awful.util.eval,
         awful.prompt.bash, awful.util.getdir('cache')..'/history_eval')
     end),
@@ -374,7 +363,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = spacer..'.'..functions.set_fg(beautiful.fg_focus, layout)..'.'..spacer
+        layoutbox[screen].text = functions.set_fg(beautiful.fg_focus, '.')..layout..functions.set_fg(beautiful.fg_focus, '.')..spacer
     else
         layoutbox[screen].text = nil
     end
@@ -397,21 +386,23 @@ awful.hooks.arrange.register(function (screen)
 end)
 
 -- Runonce
-functions.clock('%B %d,', '%H:%M', clockbox)
 functions.cpu(cpubox)
-functions.battery('BAT1', batbox)
+functions.loadavg(loadbox)
 functions.memory(membox)
+functions.clock(clockbox, '%B %d,', '%H:%M')
+functions.battery(batbox, 'BAT1')
 
 -- 20 seconds
 awful.hooks.timer.register(20, function ()
     functions.cpu(cpubox)
-    functions.battery('BAT1', batbox)
+    functions.loadavg(loadbox)
     functions.memory(membox)
+    functions.battery(batbox, 'BAT1')
 end)
 
 -- 1 minute
 awful.hooks.timer.register(60, function ()
-    functions.clock('%B %d,', '%H:%M', clockbox)
+    functions.clock(clockbox, '%B %d,', '%H:%M')
 end)
 
 io.stderr:write("\n\rAwesome loaded at "..os.date("%B %d, %H:%M").."\r\n\n")
