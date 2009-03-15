@@ -4,6 +4,7 @@
 -------------------------------------------------------------------------------
 
 -- {{{1 Environment
+
 local os = os
 local io = io
 local math = math
@@ -27,10 +28,6 @@ function set_fg(fgcolor, text)
     if text then return '<span color="'..fgcolor..'">'..text..'</span>' end
 end
 
-function set_focus_fg(text)
-    if text then return set_fg(beautiful.fg_focus, text) end
-end
-
 function set_font(font, text)
     if text then return '<span font_desc="'..font..'">'..text..'</span>' end
 end
@@ -44,26 +41,19 @@ end
 -- {{{1 Battery
 
 function battery(bwidget, adapter)
-    local level = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage')
-
-    if level then
-        charge = level:read()
-        level:close()
+    local hal = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage')
+    if hal then
+        charge = hal:read()
+        hal:close()
     end
 
-    bwidget.text = '['..charge..'%] '
-
-    -- Naughtify me when battery gets really low
-    if tonumber(charge) <= 10 then
-        naughty.notify({ text = 'Battery low! '..charge..'% left!' })
-    end
+    bwidget.text = spacer..charge..'% '..set_fg('#4C4C4C', '|')
 end
 
 -- {{{1 Memory
 
-function memory(mwidget, used_for)
+function memory(mwidget)
     local memfile = io.open('/proc/meminfo')
-
     if memfile then
         for line in memfile:lines() do
             if line:match("^MemTotal.*") then
@@ -89,10 +79,8 @@ end
 -- {{{1 CPU
 
 function cpu(cpwidget)
-    local temperature = 0
-    local howmany = 0
+    local temperature, howmany = 0, 0
     local sensors = io.popen('sensors')
-
     if sensors then
         for line in sensors:lines() do
             if line:match(':%s+%+([.%d]+)') then
@@ -105,7 +93,26 @@ function cpu(cpwidget)
 
     temperature = temperature / howmany
 
-    cpwidget.text = spacer..temperature..'°C '..set_fg('#4C4C4C', '|')
+    local freq = {}
+    local gov = {}
+    for i = 0, 1 do
+        local frequency = io.open('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_cur_freq')
+        if frequency then
+            freq[i] = frequency:read()
+            frequency:close()
+            local mhz = freq[i]:match('(.*)000')
+            if mhz then
+                freq[i] = mhz
+            end
+        end
+        local governor = io.open('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_governor')
+        if governor then
+            gov[i] = governor:read()
+            governor:close()
+        end
+    end
+
+    cpwidget.text = spacer..freq[0]..'/'..freq[1]..'MHz ('..gov[0]..') @ '..temperature..'°C '..set_fg('#4C4C4C', '|')
 end
 
 -- {{{1 Load Average
@@ -125,9 +132,8 @@ function loadavg(lwidget)
         "#FF4444",
     }
     local loadavg = io.open('/proc/loadavg')
-
     if loadavg then
-        local txt = loadavg:read('*all')
+        local txt = loadavg:read()
         loadavg:close()
         if type(txt) == 'string' then
             local one, five, ten = txt:match("^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+")
@@ -143,4 +149,20 @@ function loadavg(lwidget)
     end
 
     lwidget.text = spacer..set_fg(colors, loadtext)..spacer..set_fg('#4C4C4C', '|')
+end
+
+-- {{{1 Volume
+
+function volume(vwidget, mixer)
+    local volume = io.popen('amixer get '..mixer)
+    if volume then
+        local txt = volume:read('*a')
+        volume:close()
+        vol = txt:match("%[(%d+%%)%]")
+        if txt:match("%[off%]") then
+            vol = 'Mute'
+        end
+    end
+
+    vwidget.text = '['..vol..'] '
 end

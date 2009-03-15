@@ -27,7 +27,7 @@ local modkey = 'Mod4'
 local term = 'urxvtc'
 local browser = 'firefox'
 local music = "wine ~/.wine/drive_c/Program\\ Files/Spotify/spotify.exe"
-local theme_path = awful.util.getdir('config')..'/themes/bluish'
+local theme_path = awful.util.getdir('config')..'/themes/reddish'
 beautiful.init(theme_path)
 
 local layouts =
@@ -55,15 +55,15 @@ local app_rules =
 
 local tag_properties =
 {
-    { name = '1.m', layout = layouts[1], mwfact = 0.618033988769 },
-    { name = '2.w', layout = layouts[3]                          },
-    { name = '3.d', layout = layouts[1]                          },
-    { name = '4',   layout = layouts[1]                          },
-    { name = '5',   layout = layouts[1]                          },
-    { name = '6',   layout = layouts[1]                          },
-    { name = '7',   layout = layouts[1]                          },
-    { name = '8',   layout = layouts[1]                          },
-    { name = '9',   layout = layouts[1]                          }
+    { name = '1.m', layout = layouts[1] },
+    { name = '2.w', layout = layouts[3] },
+    { name = '3.d', layout = layouts[1] },
+    { name = '4',   layout = layouts[1] },
+    { name = '5',   layout = layouts[1] },
+    { name = '6',   layout = layouts[1] },
+    { name = '7',   layout = layouts[1] },
+    { name = '8',   layout = layouts[1] },
+    { name = '9',   layout = layouts[1] }
 }
 
 for s = 1, screen.count() do
@@ -109,6 +109,7 @@ loadbox = widget({ type = 'textbox', align = 'right' })
 membox = widget({ type = 'textbox', align = 'right' })
 clockbox = widget({ type = 'textbox', align = 'right' })
 batbox = widget({ type = 'textbox', align = 'right' })
+volbox = widget({ type = 'textbox', align = 'right' })
 
 taglist.buttons =
 {
@@ -144,7 +145,7 @@ for s = 1, screen.count() do
     statusbar[s] = wibox(
     {
         position = 'top',
-        height = '12',
+        height = '14',
         fg = beautiful.fg_normal,
         bg = beautiful.bg_normal,
     })
@@ -158,8 +159,9 @@ for s = 1, screen.count() do
         cpubox,
         loadbox,
         membox,
-        clockbox,
         batbox,
+        clockbox,
+        volbox,
         s == 1 and systray or nil
     }
     statusbar[s].screen = s
@@ -389,15 +391,21 @@ end)
 functions.cpu(cpubox)
 functions.loadavg(loadbox)
 functions.memory(membox)
-functions.clock(clockbox, '%B %d,', '%H:%M')
 functions.battery(batbox, 'BAT1')
+functions.clock(clockbox, '%B %d,', '%H:%M')
+functions.volume(volbox, 'Master')
+
+-- 10 seconds
+awful.hooks.timer.register(10, function ()
+    functions.cpu(cpubox)
+    functions.loadavg(loadbox)
+end)
 
 -- 20 seconds
 awful.hooks.timer.register(20, function ()
-    functions.cpu(cpubox)
-    functions.loadavg(loadbox)
     functions.memory(membox)
     functions.battery(batbox, 'BAT1')
+    functions.volume(volbox, 'Master')
 end)
 
 -- 1 minute
