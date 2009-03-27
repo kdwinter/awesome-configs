@@ -1,19 +1,27 @@
 font                    = Terminus 8
 
-bg_normal               = #1E1E1E
-bg_focus                = #33525F
-bg_urgent               = #CF6060
-bg_minimize             = #1E1E1E
- 
-fg_normal               = #DDDCDC
-fg_focus                = #C9C180
-fg_urgent               = #FFFFFF
+fg_normal               = #DCDCCC
+fg_focus                = #F0DFAF
+fg_urgent               = #CC9393
 fg_minimize             = #666666
 
+bg_normal               = #3F3F3F
+bg_focus                = #1E2320
+bg_urgent               = #3F3F3F
+bg_minimize             = #222222
+
 border_width            = 1
-border_normal           = #1E1E1E
-border_focus            = #33525F
-border_marked           = #CF6060
+border_normal           = #1E2320
+border_focus            = #4C4C4C
+border_marked           = #CC9393
+
+menu_height             = 15
+menu_width              = 100
+
+taglist_squares         = true
+titlebar_close_button   = false
+
+wallpaper_cmd           = awsetbg /home/gig/walls/darkness.png
 
 taglist_squares_sel     = /usr/share/awesome/themes/default/taglist/squarefw.png
 taglist_squares_unsel   = /usr/share/awesome/themes/default/taglist/squarew.png
@@ -26,7 +34,7 @@ menu_width              = 100
 taglist_squares         = true
 titlebar_close_button   = false
 
-wallpaper_cmd           = awsetbg /home/gig/walls/diagonals.jpg
+wallpaper_cmd           = awsetbg /home/gig/walls/darkness.png
 
 layout_floating         = /usr/share/awesome/themes/default/layouts/floatingw.png
 layout_magnifier        = /home/gig/.config/awesome/icons/layouts/magnifier.png

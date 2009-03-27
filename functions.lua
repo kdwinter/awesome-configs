@@ -12,9 +12,6 @@ local string = string
 local type = type
 local tonumber = tonumber
 local spacer = ' '
-local awful = require('awful')
-local beautiful = require('beautiful')
-local naughty = require('naughty')
 
 module('functions')
 
@@ -34,8 +31,8 @@ end
 
 -- {{{1 Clock
 
-function clock(cwidget, dateformat, timeformat)
-    cwidget.text = spacer..os.date(dateformat)..spacer..set_fg(beautiful.fg_focus, os.date(timeformat))..spacer
+function clock(cwidget, format)
+    cwidget.text = spacer..os.date(format)..spacer
 end
 
 -- {{{1 Battery
@@ -69,8 +66,7 @@ function memory(mwidget)
         memfile:close()
     end
 
-    mem_free = mem_free + mem_buffers + mem_cached
-    mem_in_use = mem_total - mem_free
+    mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
     mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
     mwidget.text = spacer..mem_in_use..'Mb '..set_fg('#4C4C4C', '|')
@@ -93,8 +89,7 @@ function cpu(cpwidget)
 
     temperature = temperature / howmany
 
-    local freq = {}
-    local gov = {}
+    local freq, gov = {}, {}
     for i = 0, 1 do
         local frequency = io.open('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_cur_freq')
         if frequency then
@@ -136,7 +131,7 @@ function loadavg(lwidget)
         local txt = loadavg:read()
         loadavg:close()
         if type(txt) == 'string' then
-            local one, five, ten = txt:match("^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+")
+            local one, five, ten = txt:match("^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+") -- so ugly :[
             if type(one) == 'string' then
                 loadtext = string.format('%.2f %.2f %.2f', one, five, ten)
             end
