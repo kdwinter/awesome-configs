@@ -12,6 +12,8 @@ local string = string
 local type = type
 local tonumber = tonumber
 local spacer = ' '
+local awful = require('awful')
+local beautiful = require('beautiful')
 
 module('functions')
 
@@ -29,27 +31,78 @@ function set_font(font, text)
     if text then return '<span font_desc="'..font..'">'..text..'</span>' end
 end
 
+-- {{{1 Util
+
+function escape(text)
+    return awful.util.escape(text or 'nil')
+end
+
+-- Copy from awful.util
+function pread(cmd)
+    if cmd and cmd ~= '' then
+        local f, err = io.popen(cmd, 'r')
+        if f then
+            local s = f:read('*all')
+            f:close()
+            return s
+        else
+            print(err)
+        end
+    end
+end
+
+-- Same as pread, but files instead of processes
+function fread(cmd)
+    if cmd and cmd ~= '' then
+        local f, err = io.open(cmd, 'r')
+        if f then
+            local s = f:read('*all')
+            f:close()
+            return s
+        else
+            print(err)
+        end
+    end
+end
+
 -- {{{1 Clock
 
-function clock(cwidget, format)
-    cwidget.text = spacer..os.date(format)..spacer
+function clock(widget, format)
+    widget.text = spacer..os.date(format)..spacer
 end
 
 -- {{{1 Battery
 
-function battery(bwidget, adapter)
-    local hal = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage')
-    if hal then
-        charge = hal:read()
-        hal:close()
+function battery(widget, adapter)
+    local index, color = 0, ''
+    local palette =
+    {
+        "#FF4444",
+        "#EE8888",
+        "#DD9988",
+        "#CCAA88",
+        "#CCBB88",
+        "#CCCC88",
+        "#BBBB88",
+        "#AAAA88",
+        "#999988",
+        "#888888",
+    }
+    local charge = pread('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage'):gsub("\n", '')
+    if tonumber(charge) > 10 then
+        index = math.min(math.floor(charge / 10), #palette)
+    else
+        index = 1
     end
+    color = palette[index]
 
-    bwidget.text = spacer..charge..'% '..set_fg('#4C4C4C', '|')
+
+    widget.text = spacer..set_fg(color, charge..'%')..set_fg(beautiful.fg_focus, ' |')
 end
 
 -- {{{1 Memory
 
-function memory(mwidget)
+function memory(widget)
     local memfile = io.open('/proc/meminfo')
     if memfile then
         for line in memfile:lines() do
@@ -63,18 +116,17 @@ function memory(mwidget)
                 mem_cached = math.floor(tonumber(line:match("(%d+)")) / 1024)
             end
         end
-        memfile:close()
     end
 
-    mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
-    mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
+    local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
+    local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
-    mwidget.text = spacer..mem_in_use..'Mb '..set_fg('#4C4C4C', '|')
+    widget.text = spacer..mem_in_use..'Mb'..set_fg(beautiful.fg_focus, ' |')
 end
 
 -- {{{1 CPU
 
-function cpu(cpwidget)
+function cpu(widget)
     local temperature, howmany = 0, 0
     local sensors = io.popen('sensors')
     if sensors then
@@ -91,28 +143,16 @@ function cpu(cpwidget)
 
     local freq, gov = {}, {}
     for i = 0, 1 do
-        local frequency = io.open('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_cur_freq')
-        if frequency then
-            freq[i] = frequency:read()
-            frequency:close()
-            local mhz = freq[i]:match('(.*)000')
-            if mhz then
-                freq[i] = mhz
-            end
-        end
-        local governor = io.open('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_governor')
-        if governor then
-            gov[i] = governor:read()
-            governor:close()
-        end
+        freq[i] = fread('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_cur_freq'):match('(.*)000')
+        gov[i] = fread('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_governor'):gsub("\n", '')
     end
 
-    cpwidget.text = spacer..freq[0]..'/'..freq[1]..'MHz ('..gov[0]..') @ '..temperature..'°C '..set_fg('#4C4C4C', '|')
+    widget.text = spacer..freq[0]..'/'..freq[1]..'MHz ('..gov[0]..') @ '..temperature..'C'..set_fg(beautiful.fg_focus, ' |')
 end
 
 -- {{{1 Load Average
 
-function loadavg(lwidget)
+function loadavg(widget)
     local palette =
     {
         "#888888",
@@ -126,38 +166,32 @@ function loadavg(lwidget)
         "#EE8888",
         "#FF4444",
     }
-    local loadavg = io.open('/proc/loadavg')
-    if loadavg then
-        local txt = loadavg:read()
-        loadavg:close()
-        if type(txt) == 'string' then
-            local one, five, ten = txt:match("^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+") -- so ugly :[
-            if type(one) == 'string' then
-                loadtext = string.format('%.2f %.2f %.2f', one, five, ten)
-            end
-            local current_avg = tonumber(one)
-            if type(current_avg) == 'number' then
-                local index  = math.min(math.floor(current_avg * (#palette-1)) + 1, #palette)
-                colors = palette[index]
-            end
+    local txt = fread('/proc/loadavg')
+    if type(txt) == 'string' then
+        local one, five, ten = txt:match('^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+')
+        if type(one) == 'string' then
+            loadtext = string.format('%.2f %.2f %.2f', one, five, ten)
+        end
+        local current_avg = tonumber(one)
+        if type(current_avg) == 'number' then
+            local index = math.min(math.floor(current_avg * (#palette-1)) + 1, #palette)
+            color = palette[index]
         end
     end
 
-    lwidget.text = spacer..set_fg(colors, loadtext)..spacer..set_fg('#4C4C4C', '|')
+    widget.text = spacer..set_fg(color, loadtext)..set_fg(beautiful.fg_focus, ' |')
 end
 
 -- {{{1 Volume
 
-function volume(vwidget, mixer)
-    local volume = io.popen('amixer get '..mixer)
-    if volume then
-        local txt = volume:read('*a')
-        volume:close()
-        vol = txt:match("%[(%d+%%)%]")
-        if txt:match("%[off%]") then
-            vol = 'Mute'
-        end
+function volume(widget, mixer)
+    local vol = ''
+    local txt = pread('amixer get '..mixer)
+    if txt:match('%[off%]') then
+        vol = 'Mute'
+    else
+        vol = txt:match('%[(%d+%%)%]')
     end
 
-    vwidget.text = '['..vol..'] '
+    widget.text = '['..vol..'] '
 end
