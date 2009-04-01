@@ -117,7 +117,6 @@ function memory(widget)
             end
         end
     end
-
     local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
     local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
@@ -138,7 +137,6 @@ function cpu(widget)
         end
         sensors:close()
     end
-
     temperature = temperature / howmany
 
     local freq, gov = {}, {}

@@ -1,8 +1,8 @@
-font                    = cure 8
+font                    = ProggyTinyTT 8
 
-bg_normal               = #222222
-bg_focus                = #222222
-bg_urgent               = #0066FF
+bg_normal               = #000000
+bg_focus                = #1F1F1F
+bg_urgent               = #3099DD
 bg_minimize             = #222222
  
 fg_normal               = #DCDCCC

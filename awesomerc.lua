@@ -29,7 +29,6 @@ settings.term       = 'urxvtc'
 settings.browser    = 'firefox-nightly'
 settings.music      = "wine ~/.wine/drive_c/Program\\ Files/Spotify/spotify.exe"
 settings.theme_path = awful.util.getdir('config')..'/themes/bluish'
-
 -- Actually load theme
 beautiful.init(settings.theme_path)
 
@@ -41,29 +40,28 @@ settings.layouts =
     awful.layout.suit.magnifier,
     awful.layout.suit.floating
 }
-
 settings.app_rules =
 {  -- Class         Instance        Title               Screen      Tag       Floating
-    { 'xterm',      nil,            nil,                1           , 9,      nil  },
-    { 'Firefox',    nil,            nil,                1           , 2,      nil  },
-    { 'Firefox',    'Download',     nil,                1           , nil,    true },
-    { 'Firefox',    'Places',       nil,                1           , nil,    true },
-    { 'MPlayer',    nil,            nil,                1           , 4,      true },
-    { nil,          nil,            'VLC media player', 1           , 4,      true },
-    { nil,          'spotify.exe',  'Spotify',          1           , 4,      true }
+    { 'xterm',      nil,            nil,                1,          9,      nil  },
+    { 'Firefox',    nil,            nil,                1,          2,      nil  },
+    { 'Firefox',    'Download',     nil,                1,          nil,    true },
+    { 'Firefox',    'Places',       nil,                1,          nil,    true },
+    { 'MPlayer',    nil,            nil,                1,          4,      true },
+    { 'Pidgin',     nil,            nil,                1,          5,      nil  },
+    { nil,          nil,            'VLC media player', 1,          4,      true },
+    { nil,          'spotify.exe',  'Spotify',          1,          4,      true }
 }
-
 settings.tag_properties =
 {
-    { name = '1.m', layout = settings.layouts[1] },
-    { name = '2.w', layout = settings.layouts[3] },
-    { name = '3.d', layout = settings.layouts[1] },
-    { name = '4',   layout = settings.layouts[1] },
-    { name = '5',   layout = settings.layouts[1] },
-    { name = '6',   layout = settings.layouts[1] },
-    { name = '7',   layout = settings.layouts[1] },
-    { name = '8',   layout = settings.layouts[1] },
-    { name = '9',   layout = settings.layouts[1] }
+    { name = 'main', layout = settings.layouts[1], mwfact = 0.550 },
+    { name = 'web',  layout = settings.layouts[3] },
+    { name = 'dev',  layout = settings.layouts[1] },
+    { name = 'misc', layout = settings.layouts[5] },
+    { name = 'im',   layout = settings.layouts[1], mwfact = 0.225 },
+    { name = '6',    layout = settings.layouts[1] },
+    { name = '7',    layout = settings.layouts[1] },
+    { name = '8',    layout = settings.layouts[1] },
+    { name = '9',    layout = settings.layouts[1] }
 }
 
 
@@ -102,22 +100,22 @@ local main_menu = awful.menu.new(
     }
 })
 
-systray = widget({ type = 'systray', align = 'right' })
-cpubox  = widget({ type = 'textbox', align = 'right' })
-loadbox = widget({ type = 'textbox', align = 'right' })
-membox  = widget({ type = 'textbox', align = 'right' })
+systray  = widget({ type = 'systray', align = 'right' })
+cpubox   = widget({ type = 'textbox', align = 'right' })
+loadbox  = widget({ type = 'textbox', align = 'right' })
+membox   = widget({ type = 'textbox', align = 'right' })
 clockbox = widget({ type = 'textbox', align = 'right' })
-batbox  = widget({ type = 'textbox', align = 'right' })
-volbox  = widget({ type = 'textbox', align = 'right' })
+batbox   = widget({ type = 'textbox', align = 'right' })
+volbox   = widget({ type = 'textbox', align = 'right' })
 
 taglist.buttons =
 {
-    button({        }, 1, awful.tag.viewonly),
+    button({ }, 1, awful.tag.viewonly),
     button({ settings.modkey }, 1, awful.client.movetotag),
-    button({        }, 3, function (tag) tag.selected = not tag.selected end),
+    button({ }, 3, function (tag) tag.selected = not tag.selected end),
     button({ settings.modkey }, 3, awful.client.toggletag),
-    button({        }, 4, awful.tag.viewnext),
-    button({        }, 5, awful.tag.viewprev) 
+    button({ }, 4, awful.tag.viewnext),
+    button({ }, 5, awful.tag.viewprev) 
 }
 tasklist.buttons =
 {
@@ -137,13 +135,13 @@ for s = 1, screen.count() do
         button({ }, 5, function () awful.layout.inc(settings.layouts, -1) end)
     })
     taglist[s] = awful.widget.taglist.new(s, awful.widget.taglist.label.noempty, taglist.buttons)
-    tasklist[s] = awful.widget.tasklist.new(function(c)
+    --[[tasklist[s] = awful.widget.tasklist.new(function(c)
         return awful.widget.tasklist.label.currenttags(c, s)
-    end, tasklist.buttons)
+    end, tasklist.buttons)]]
 
     statusbar[s] = wibox(
     {
-        position = 'top',
+        position = 'bottom',
         height = '14',
         fg = beautiful.fg_normal,
         bg = beautiful.bg_normal,
@@ -152,9 +150,9 @@ for s = 1, screen.count() do
     {
         taglist[s],
         layoutbox[s],
-        spsep,
+        -- spsep,
         promptbox[s],
-        tasklist[s],
+        -- tasklist[s],
         cpubox,
         loadbox,
         membox,
@@ -217,14 +215,28 @@ local globalkeys =
         promptbox[mouse.screen], awful.util.spawn,
         awful.completion.shell, awful.util.getdir('cache')..'/history')
     end),
-    key({ settings.modkey }, 'F4', function ()
-        awful.prompt.run({ prompt = ' Run Lua: ' },
+    key({ settings.modkey }, 'e', function ()
+        awful.prompt.run({ prompt = ' Eval Lua: ' },
         promptbox[mouse.screen], awful.util.eval,
         awful.prompt.bash, awful.util.getdir('cache')..'/history_eval')
     end),
-    key({                   }, '#121',  function () awful.util.spawn('rvol -t') end),
-    key({                   }, '#122',  function () awful.util.spawn('rvol -d 2') end),
-    key({                   }, '#123',  function () awful.util.spawn('rvol -i 2') end)
+    key({ settings.modkey }, 's', function ()
+        awful.prompt.run({ prompt = ' Yubnub: ' },
+        promptbox[mouse.screen], function (search)
+            if search ~= '' then
+                awful.util.spawn(settings.browser.." 'http://yubnub.org/parser/parse?command="..search:gsub("'", "\'").."'")
+            else
+                naughty.notify(
+                {
+                    text = functions.set_fg(beautiful.fg_focus, 'Usage: ')..awful.util.escape('<yubnub command> <query>'),
+                })
+            end
+        end,
+        nil, awful.util.getdir('cache') .. '/yubnub-history')
+    end),
+    key({ }, '#121',  function () awful.util.spawn('rvol -t') end),
+    key({ }, '#122',  function () awful.util.spawn('rvol -d 2') end),
+    key({ }, '#123',  function () awful.util.spawn('rvol -i 2') end)
 }
 
 local clientkeys =
@@ -312,7 +324,7 @@ awful.hooks.manage.register(function (c)
 
     c:buttons(
     {
-        button({                   }, 1, function (c) client.focus = c; c:raise() end),
+        button({ }, 1, function (c) client.focus = c; c:raise() end),
         button({ settings.modkey            }, 1, awful.mouse.client.move),
         button({ settings.modkey, 'Control' }, 1, awful.mouse.client.dragtotag.widget),
         button({ settings.modkey            }, 3, awful.mouse.client.resize)
@@ -363,7 +375,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = functions.set_fg(beautiful.fg_focus, ' .')..layout..functions.set_fg(beautiful.fg_focus, '. ')
+        layoutbox[screen].text = functions.set_fg(beautiful.fg_focus, ' | ')..layout
     else
         layoutbox[screen].text = nil
     end
