@@ -2,13 +2,14 @@
 -- @file awesomerc.lua
 -- @author Gigamo &lt;gigamo@gmail.com&gt;
 -------------------------------------------------------------------------------
+
 -- {{{1 Tables
 
 local tags      = { }
 local statusbar = { }
 local promptbox = { }
 local taglist   = { }
-local tasklist  = { }
+--local tasklist  = { }
 local layoutbox = { }
 local settings  = { }
 
@@ -41,7 +42,7 @@ settings.layouts =
     awful.layout.suit.floating
 }
 settings.app_rules =
-{  -- Class         Instance        Title               Screen      Tag       Floating
+{  -- Class         Instance        Title               Screen      Tag     Floating
     { 'xterm',      nil,            nil,                1,          9,      nil  },
     { 'Firefox',    nil,            nil,                1,          2,      nil  },
     { 'Firefox',    'Download',     nil,                1,          nil,    true },
@@ -53,15 +54,15 @@ settings.app_rules =
 }
 settings.tag_properties =
 {
-    { name = 'main', layout = settings.layouts[1], mwfact = 0.550 },
-    { name = 'web',  layout = settings.layouts[3] },
-    { name = 'dev',  layout = settings.layouts[1] },
-    { name = 'misc', layout = settings.layouts[5] },
-    { name = 'im',   layout = settings.layouts[1], mwfact = 0.225 },
-    { name = '6',    layout = settings.layouts[1] },
-    { name = '7',    layout = settings.layouts[1] },
-    { name = '8',    layout = settings.layouts[1] },
-    { name = '9',    layout = settings.layouts[1] }
+    { name = 'one',   layout = settings.layouts[2], mwfact = 0.550 },
+    { name = 'two',   layout = settings.layouts[3] },
+    { name = 'three', layout = settings.layouts[1] },
+    { name = 'four',  layout = settings.layouts[5] },
+    { name = 'five',  layout = settings.layouts[1], mwfact = 0.225 },
+    { name = 'six',   layout = settings.layouts[1] },
+    { name = 'seven', layout = settings.layouts[1] },
+    { name = 'eight', layout = settings.layouts[1] },
+    { name = 'nine',  layout = settings.layouts[1] }
 }
 
 
@@ -117,12 +118,12 @@ taglist.buttons =
     button({ }, 4, awful.tag.viewnext),
     button({ }, 5, awful.tag.viewprev) 
 }
-tasklist.buttons =
+--[[tasklist.buttons =
 {
     button({ }, 1, function (c) client.focus = c; c:raise() end),
     button({ }, 4, function () awful.client.focus.byidx(1) end),
     button({ }, 5, function () awful.client.focus.byidx(-1) end) 
-}
+}]]
 
 for s = 1, screen.count() do
     promptbox[s] = widget({ type = 'textbox', align = 'left' })
@@ -141,7 +142,7 @@ for s = 1, screen.count() do
 
     statusbar[s] = wibox(
     {
-        position = 'bottom',
+        position = 'top',
         height = '14',
         fg = beautiful.fg_normal,
         bg = beautiful.bg_normal,
@@ -150,9 +151,8 @@ for s = 1, screen.count() do
     {
         taglist[s],
         layoutbox[s],
-        -- spsep,
         promptbox[s],
-        -- tasklist[s],
+        --tasklist[s],
         cpubox,
         loadbox,
         membox,
@@ -375,7 +375,7 @@ end)
 awful.hooks.arrange.register(function (screen)
     local layout = awful.layout.getname(awful.layout.get(screen))
     if layout then
-        layoutbox[screen].text = functions.set_fg(beautiful.fg_focus, ' | ')..layout
+        layoutbox[screen].text = functions.set_fg(beautiful.fg_focus, '. ')..functions.set_fg(beautiful.fg_minimize, layout)
     else
         layoutbox[screen].text = nil
     end

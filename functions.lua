@@ -96,8 +96,7 @@ function battery(widget, adapter)
     end
     color = palette[index]
 
-
-    widget.text = spacer..set_fg(color, charge..'%')..set_fg(beautiful.fg_focus, ' |')
+    widget.text = spacer..set_fg(color, charge..'%')..set_fg('#4C4C4C', ' |')
 end
 
 -- {{{1 Memory
@@ -120,7 +119,7 @@ function memory(widget)
     local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
     local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
-    widget.text = spacer..mem_in_use..'Mb'..set_fg(beautiful.fg_focus, ' |')
+    widget.text = spacer..mem_in_use..'Mb'..set_fg('#4C4C4C', ' |')
 end
 
 -- {{{1 CPU
@@ -145,7 +144,7 @@ function cpu(widget)
         gov[i] = fread('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_governor'):gsub("\n", '')
     end
 
-    widget.text = spacer..freq[0]..'/'..freq[1]..'MHz ('..gov[0]..') @ '..temperature..'C'..set_fg(beautiful.fg_focus, ' |')
+    widget.text = spacer..freq[0]..'/'..freq[1]..'MHz ('..gov[0]..') @ '..temperature..'C'..set_fg('#4C4C4C', ' |')
 end
 
 -- {{{1 Load Average
@@ -177,7 +176,7 @@ function loadavg(widget)
         end
     end
 
-    widget.text = spacer..set_fg(color, loadtext)..set_fg(beautiful.fg_focus, ' |')
+    widget.text = spacer..set_fg(color, loadtext)..set_fg('#4C4C4C', ' |')
 end
 
 -- {{{1 Volume

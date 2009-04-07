@@ -1,13 +1,13 @@
-font                    = ProggyTinyTT 8
+font                    = snap 8
 
-bg_normal               = #000000
-bg_focus                = #1F1F1F
-bg_urgent               = #3099DD
+bg_normal               = #262626
+bg_focus                = #000000
+bg_urgent               = #000000
 bg_minimize             = #222222
  
 fg_normal               = #DCDCCC
 fg_focus                = #3099DD
-fg_urgent               = #FFFFFF
+fg_urgent               = #D6156C
 fg_minimize             = #666666
 
 border_width            = 1
