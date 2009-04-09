@@ -232,7 +232,25 @@ local globalkeys =
                 })
             end
         end,
-        nil, awful.util.getdir('cache') .. '/yubnub-history')
+        nil, awful.util.getdir('cache')..'/yubnub-history')
+    end),
+    key({ settings.modkey }, 't', function ()
+        awful.prompt.run({ prompt = ' Read: ' },
+        promptbox[mouse.screen], function (s)
+            local txt = functions.pread(s..' 2>&1')
+            txt = txt:sub(1, 2400)
+            txt = functions.escape(txt)
+            local h = naughty.config.presets.normal.height
+            naughty.config.presets.normal.height = 12
+            naughty.notify({
+                text = txt,
+                timeout = 10,
+                width = 540,
+                screen = screen.count(),
+            })
+            naughty.config.presets.normal.height = h
+        end,
+        awful.completion.shell, os.getenv("HOME")..'/.cache/awesome/history_commands')
     end),
     key({ }, '#121',  function () awful.util.spawn('rvol -t') end),
     key({ }, '#122',  function () awful.util.spawn('rvol -d 2') end),
