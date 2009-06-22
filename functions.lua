@@ -52,9 +52,9 @@ function pread(cmd)
 end
 
 -- Same as pread, but files instead of processes
-function fread(cmd)
-    if cmd and cmd ~= '' then
-        local f, err = io.open(cmd, 'r')
+function fread(file)
+    if file and file ~= '' then
+        local f, err = io.open(file, 'r')
         if f then
             local s = f:read('*all')
             f:close()
@@ -68,35 +68,17 @@ end
 -- {{{1 Clock
 
 function clock(widget, format)
-    widget.text = spacer..os.date(format)..spacer
+    local date = os.date(format)
+
+    widget.text = set_bg('#000000', spacer..date..spacer)
 end
 
 -- {{{1 Battery
 
 function battery(widget, adapter)
-    local index, color = 0, ''
-    local palette =
-    {
-        "#FF4444",
-        "#EE8888",
-        "#DD9988",
-        "#CCAA88",
-        "#CCBB88",
-        "#CCCC88",
-        "#BBBB88",
-        "#AAAA88",
-        "#999988",
-        "#888888",
-    }
     local charge = pread('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage'):gsub("\n", '')
-    if tonumber(charge) > 10 then
-        index = math.min(math.floor(charge / 10), #palette)
-    else
-        index = 1
-    end
-    color = palette[index]
 
-    widget.text = spacer..set_fg(color, charge..'%')..set_fg('#4C4C4C', ' |')
+    widget.text = spacer..charge..'%'..set_fg('#4C4C4C', ' |')
 end
 
 -- {{{1 Memory
@@ -137,14 +119,12 @@ function cpu(widget)
         sensors:close()
     end
     temperature = temperature / howmany
-
-    local freq, gov = {}, {}
+    local freq = {}
     for i = 0, 1 do
         freq[i] = fread('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_cur_freq'):match('(.*)000')
-        gov[i] = fread('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_governor'):gsub("\n", '')
     end
 
-    widget.text = spacer..freq[0]..'/'..freq[1]..'MHz ('..gov[0]..') @ '..temperature..'C'..set_fg('#4C4C4C', ' |')
+    widget.text = spacer..freq[0]..'/'..freq[1]..'MHz @ '..temperature..'C'..set_fg('#4C4C4C', ' |')
 end
 
 -- {{{1 Load Average
@@ -164,17 +144,11 @@ function loadavg(widget)
         "#FF4444",
     }
     local txt = fread('/proc/loadavg')
-    if type(txt) == 'string' then
-        local one, five, ten = txt:match('^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+')
-        if type(one) == 'string' then
-            loadtext = string.format('%.2f %.2f %.2f', one, five, ten)
-        end
-        local current_avg = tonumber(one)
-        if type(current_avg) == 'number' then
-            local index = math.min(math.floor(current_avg * (#palette-1)) + 1, #palette)
-            color = palette[index]
-        end
-    end
+    local one, five, ten = txt:match('^([%d%.]+)%s+([%d%.]+)%s+([%d%.]+)%s+')
+    local loadtext = string.format('%.2f %.2f %.2f', one, five, ten)
+    local current_avg = tonumber(one)
+    local index = math.min(math.floor(current_avg * (#palette-1)) + 1, #palette)
+    local color = palette[index]
 
     widget.text = spacer..set_fg(color, loadtext)..set_fg('#4C4C4C', ' |')
 end
@@ -190,5 +164,5 @@ function volume(widget, mixer)
         vol = txt:match('%[(%d+%%)%]')
     end
 
-    widget.text = '['..vol..'] '
+    widget.text = set_bg('#000000', '['..vol..'] ')
 end
