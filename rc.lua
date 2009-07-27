@@ -16,6 +16,7 @@ local settings  = { }
 
 require('awful')
 require('beautiful')
+require('naughty')
 require('functions')
 
 -- Load theme
@@ -40,9 +41,9 @@ settings.app_rules =
     { 'Firefox',    nil,            nil,                1,          2,      false },
     { 'Firefox',    'Download',     nil,                1,          nil,    true  },
     { 'Firefox',    'Places',       nil,                1,          nil,    true  },
-    { 'MPlayer',    nil,            nil,                1,          4,      true  },
-    { 'Pidgin',     nil,            nil,                1,          5,      false },
-    { nil,          nil,            'VLC media player', 1,          4,      true  },
+    { 'MPlayer',    nil,            nil,                1,          5,      true  },
+    { 'Pidgin',     nil,            nil,                1,          4,      false },
+    { nil,          nil,            'VLC media player', 1,          5,      true  },
 }
 settings.tag_properties =
 {
@@ -83,23 +84,20 @@ clockbox = widget({ type = 'textbox', align = 'right' })
 batbox   = widget({ type = 'textbox', align = 'right' })
 volbox   = widget({ type = 'textbox', align = 'right' })
 
-taglist.buttons =
-{
-    button({ }, 1, awful.tag.viewonly),
-    button({ }, 3, function (tag) tag.selected = not tag.selected end),
-    button({ settings.modkey }, 1, awful.client.movetotag),
-    button({ settings.modkey }, 3, awful.client.toggletag),
-}
+taglist.buttons = awful.util.table.join(
+    awful.button({ }, 1, awful.tag.viewonly),
+    awful.button({ }, 3, function (tag) tag.selected = not tag.selected end),
+    awful.button({ settings.modkey }, 1, awful.client.movetotag),
+    awful.button({ settings.modkey }, 3, awful.client.toggletag)
+    )
 
 for s = 1, screen.count() do
     promptbox[s] = awful.widget.prompt({ align = 'left' })
     layoutbox[s] = awful.widget.layoutbox(s, { align = 'left' })
-    --layoutbox[s] = widget({ type = 'textbox', align = 'left' })
-    layoutbox[s]:buttons(
-    {
-        button({ }, 1, function () awful.layout.inc(settings.layouts, 1) end),
-        button({ }, 3, function () awful.layout.inc(settings.layouts, -1) end),
-    })
+    layoutbox[s]:buttons(awful.util.table.join(
+                         awful.button({ }, 1, function () awful.layout.inc(settings.layouts, 1) end),
+                         awful.button({ }, 3, function () awful.layout.inc(settings.layouts, -1) end)
+    ))
     taglist[s] = awful.widget.taglist.new(s, awful.widget.taglist.label.all, taglist.buttons)
     statusbar[s] = awful.wibox(
     {
@@ -107,21 +105,28 @@ for s = 1, screen.count() do
         height = '14',
         fg = beautiful.fg_normal,
         bg = beautiful.bg_normal,
+        screen = s
     })
     statusbar[s].widgets =
     {
-        taglist[s],
-        layoutbox[s],
-        promptbox[s],
-        cpubox,
-        loadbox,
-        membox,
-        batbox,
-        clockbox,
+        {
+            taglist[s],
+            layoutbox[s],
+            promptbox[s],
+            layout = awful.widget.layout.horizontal.leftright
+        },
+        --taglist[s],
+        --layoutbox[s],
+        --promptbox[s],
+        systray,
         volbox,
-        s == 1 and systray or nil
+        clockbox,
+        batbox,
+        membox,
+        loadbox,
+        cpubox,
+        layout = awful.widget.layout.horizontal.rightleft
     }
-    statusbar[s].screen = s
 end
 
 -- {{{1 Binds
@@ -134,8 +139,8 @@ root.buttons(awful.util.table.join(
 local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey            }, 'Left',  awful.tag.viewprev),
     awful.key({ settings.modkey            }, 'Right', awful.tag.viewnext),
-    awful.key({ settings.modkey            }, 'x',     function () awful.util.spawn(settings.term, false) end),
-    awful.key({ settings.modkey            }, 'f',     function () awful.util.spawn(settings.browser, false) end),
+    awful.key({ settings.modkey            }, 'x',     function () awful.util.spawn(settings.term) end),
+    awful.key({ settings.modkey            }, 'f',     function () awful.util.spawn(settings.browser) end),
     awful.key({ settings.modkey, 'Control' }, 'r',     awesome.restart),
     awful.key({ settings.modkey, 'Shift'   }, 'q',     awesome.quit),
     awful.key({ settings.modkey            }, 'j',     function ()
@@ -168,9 +173,9 @@ local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey            }, 'space', function () awful.layout.inc(settings.layouts, 1) end),
     awful.key({ settings.modkey, 'Shift'   }, 'space', function () awful.layout.inc(settings.layouts, -1) end),
     awful.key({ settings.modkey            }, 'r',     function () promptbox[mouse.screen]:run() end),
-    awful.key({ }, '#121',  function () awful.util.spawn_with_shell('dvol -t', false) end),
-    awful.key({ }, '#122',  function () awful.util.spawn_with_shell('dvol -d 2', false) end),
-    awful.key({ }, '#123',  function () awful.util.spawn_with_shell('dvol -i 2', false) end)
+    awful.key({ }, '#121',  function () awful.util.spawn_with_shell('dvol -t') end),
+    awful.key({ }, '#122',  function () awful.util.spawn_with_shell('dvol -d 2') end),
+    awful.key({ }, '#123',  function () awful.util.spawn_with_shell('dvol -i 2') end)
 )
 
 local clientkeys = awful.util.table.join(
@@ -258,8 +263,8 @@ awful.hooks.manage.register(function (c)
 
     c:buttons(awful.util.table.join(
         awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
-        awful.button({ settings.modkey            }, 1, awful.mouse.client.move),
-        awful.button({ settings.modkey            }, 3, awful.mouse.client.resize)
+        awful.button({ settings.modkey }, 1, awful.mouse.client.move),
+        awful.button({ settings.modkey }, 3, awful.mouse.client.resize)
     ))
 
     c.border_width = beautiful.border_width

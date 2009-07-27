@@ -11,7 +11,6 @@ local math = math
 local string = string
 local type = type
 local tonumber = tonumber
-local spacer = ' '
 local awful = require('awful')
 local beautiful = require('beautiful')
 
@@ -30,6 +29,9 @@ end
 function set_font(font, text)
     if text then return '<span font_desc="'..font..'">'..text..'</span>' end
 end
+
+local separator_l = ' '
+local separator_r = ' '
 
 -- {{{1 Util
 
@@ -70,7 +72,7 @@ end
 function clock(widget, format)
     local date = os.date(format)
 
-    widget.text = set_bg('#000000', spacer..date..spacer)
+    widget.text = separator_l..date -- No separator
 end
 
 -- {{{1 Battery
@@ -78,7 +80,7 @@ end
 function battery(widget, adapter)
     local charge = pread('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..adapter..' --key battery.charge_level.percentage'):gsub("\n", '')
 
-    widget.text = spacer..charge..'%'..set_fg('#4C4C4C', ' |')
+    widget.text = separator_l..charge..'%'..separator_r
 end
 
 -- {{{1 Memory
@@ -101,7 +103,7 @@ function memory(widget)
     local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
     local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
-    widget.text = spacer..mem_in_use..'Mb'..set_fg('#4C4C4C', ' |')
+    widget.text = separator_l..mem_in_use..'Mb'..separator_r
 end
 
 -- {{{1 CPU
@@ -124,7 +126,7 @@ function cpu(widget)
         freq[i] = fread('/sys/devices/system/cpu/cpu'..i..'/cpufreq/scaling_cur_freq'):match('(.*)000')
     end
 
-    widget.text = spacer..freq[0]..'/'..freq[1]..'MHz @ '..temperature..'C'..set_fg('#4C4C4C', ' |')
+    widget.text = separator_l..freq[0]..'/'..freq[1]..'MHz @ '..temperature..'C'..separator_r
 end
 
 -- {{{1 Load Average
@@ -150,7 +152,7 @@ function loadavg(widget)
     local index = math.min(math.floor(current_avg * (#palette-1)) + 1, #palette)
     local color = palette[index]
 
-    widget.text = spacer..set_fg(color, loadtext)..set_fg('#4C4C4C', ' |')
+    widget.text = separator_l..set_fg(color, loadtext)..separator_r
 end
 
 -- {{{1 Volume
@@ -164,5 +166,5 @@ function volume(widget, mixer)
         vol = txt:match('%[(%d+%%)%]')
     end
 
-    widget.text = set_bg('#000000', '['..vol..'] ')
+    widget.text = separator_l..'['..vol..']'..separator_r
 end
