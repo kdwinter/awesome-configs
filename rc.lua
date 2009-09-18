@@ -15,18 +15,19 @@ local settings  = { }
 -- {{{1 Imports
 
 require('awful')
+require('awful.autofocus')
+require('awful.rules')
 require('beautiful')
 require('naughty')
-require('functions')
 
 -- Load theme
-beautiful.init(awful.util.getdir('config')..'/themes/bluish.lua')
+beautiful.init(awful.util.getdir('config')..'/zenburn.lua')
 
 -- {{{1 Variables
 
 settings.modkey  = 'Mod4'
 settings.term    = 'urxvtc'
-settings.browser = 'firefox-nightly'
+settings.browser = 'opera'
 settings.layouts =
 {
     awful.layout.suit.tile,
@@ -35,65 +36,47 @@ settings.layouts =
     awful.layout.suit.magnifier,
     awful.layout.suit.floating
 }
-settings.app_rules =
-{  -- Class         Instance        Title               Screen      Tag     Floating
-    { 'xterm',      nil,            nil,                1,          9,      false },
-    { 'Firefox',    nil,            nil,                1,          2,      false },
-    { 'Firefox',    'Download',     nil,                1,          nil,    true  },
-    { 'Firefox',    'Places',       nil,                1,          nil,    true  },
-    { 'MPlayer',    nil,            nil,                1,          5,      true  },
-    { 'Pidgin',     nil,            nil,                1,          4,      false },
-    { nil,          nil,            'VLC media player', 1,          5,      true  },
-}
-settings.tag_properties =
-{
-    { name = '01-main  ', layout = settings.layouts[1], mwfact = 0.550 },
-    { name = '02-web  ',  layout = settings.layouts[3] },
-    { name = '03-dev  ',  layout = settings.layouts[1] },
-    { name = '04-chat  ', layout = settings.layouts[1] },
-    { name = '05-misc  ', layout = settings.layouts[5], mwfact = 0.225 },
-    --{ name = '6', layout = settings.layouts[1] },
-    --{ name = '7', layout = settings.layouts[1] },
-    --{ name = '8', layout = settings.layouts[1] },
-    --{ name = '9', layout = settings.layouts[1] }
-}
 
 -- {{{1 Tags
 
+tags.settings = {
+    { name = 'term', layout = settings.layouts[1]  },
+    { name = 'web',  layout = settings.layouts[3]  },
+    { name = 'dev',  layout = settings.layouts[1]  },
+    { name = 'im',   layout = settings.layouts[1], mwfact = 0.13 },
+    { name = 'misc ', layout = settings.layouts[5]  },
+}
+
 for s = 1, screen.count() do
-    tags[s] = { }
-    for i, v in ipairs(settings.tag_properties) do
-        tags[s][i] = tag(v.name)
+    tags[s] = {}
+    for i, v in ipairs(tags.settings) do
+        tags[s][i] = tag({ name = v.name })
         tags[s][i].screen = s
         awful.tag.setproperty(tags[s][i], 'layout', v.layout)
         awful.tag.setproperty(tags[s][i], 'mwfact', v.mwfact)
-        awful.tag.setproperty(tags[s][i], 'nmaster', v.nmaster)
-        awful.tag.setproperty(tags[s][i], 'ncols', v.ncols)
-        awful.tag.setproperty(tags[s][i], 'icon', v.icon)
+        awful.tag.setproperty(tags[s][i], 'hide',   v.hide)
     end
     tags[s][1].selected = true
 end
 
 -- {{{1 Widgets
 
-systray  = widget({ type = 'systray', align = 'right' })
-cpubox   = widget({ type = 'textbox', align = 'right' })
-loadbox  = widget({ type = 'textbox', align = 'right' })
-membox   = widget({ type = 'textbox', align = 'right' })
-clockbox = widget({ type = 'textbox', align = 'right' })
-batbox   = widget({ type = 'textbox', align = 'right' })
-volbox   = widget({ type = 'textbox', align = 'right' })
+systray       = widget({ type = 'systray' })
+thermalwidget = widget({ type = 'textbox', name = 'thermalwidget' })
+memwidget     = widget({ type = 'textbox', name = 'memwidget' })
+batwidget     = widget({ type = 'textbox', name = 'batwidget' })
+clockwidget   = awful.widget.textclock({ align = 'right' })
 
 taglist.buttons = awful.util.table.join(
     awful.button({ }, 1, awful.tag.viewonly),
-    awful.button({ }, 3, function (tag) tag.selected = not tag.selected end),
+    awful.button({ }, 3, awful.tag.viewtoggle),
     awful.button({ settings.modkey }, 1, awful.client.movetotag),
     awful.button({ settings.modkey }, 3, awful.client.toggletag)
     )
 
 for s = 1, screen.count() do
-    promptbox[s] = awful.widget.prompt({ align = 'left' })
-    layoutbox[s] = awful.widget.layoutbox(s, { align = 'left' })
+    promptbox[s] = awful.widget.prompt({ layout = awful.widget.layout.horizontal.leftright })
+    layoutbox[s] = awful.widget.layoutbox(s)
     layoutbox[s]:buttons(awful.util.table.join(
                          awful.button({ }, 1, function () awful.layout.inc(settings.layouts, 1) end),
                          awful.button({ }, 3, function () awful.layout.inc(settings.layouts, -1) end)
@@ -115,16 +98,11 @@ for s = 1, screen.count() do
             promptbox[s],
             layout = awful.widget.layout.horizontal.leftright
         },
-        --taglist[s],
-        --layoutbox[s],
-        --promptbox[s],
         systray,
-        volbox,
-        clockbox,
-        batbox,
-        membox,
-        loadbox,
-        cpubox,
+        clockwidget,
+        batwidget,
+        memwidget,
+        thermalwidget,
         layout = awful.widget.layout.horizontal.rightleft
     }
 end
@@ -139,30 +117,27 @@ root.buttons(awful.util.table.join(
 local globalkeys = awful.util.table.join(
     awful.key({ settings.modkey            }, 'Left',  awful.tag.viewprev),
     awful.key({ settings.modkey            }, 'Right', awful.tag.viewnext),
+    awful.key({ settings.modkey,           }, 'Escape',awful.tag.history.restore),
     awful.key({ settings.modkey            }, 'x',     function () awful.util.spawn(settings.term) end),
     awful.key({ settings.modkey            }, 'f',     function () awful.util.spawn(settings.browser) end),
     awful.key({ settings.modkey, 'Control' }, 'r',     awesome.restart),
     awful.key({ settings.modkey, 'Shift'   }, 'q',     awesome.quit),
-    awful.key({ settings.modkey            }, 'j',     function ()
+    awful.key({ settings.modkey,           }, 'j',     function ()
         awful.client.focus.byidx( 1)
-        if client.focus then
-            client.focus:raise()
-        end
+        if client.focus then client.focus:raise() end
     end),
-    awful.key({ settings.modkey            }, 'k',     function ()
+    awful.key({ settings.modkey,           }, 'k',     function ()
         awful.client.focus.byidx(-1)
-        if client.focus then
-            client.focus:raise()
-        end
+        if client.focus then client.focus:raise() end
     end),
-    awful.key({ settings.modkey            }, 'Tab',   function ()
-        local allclients = awful.client.visible(client.focus.screen)
-        for i,v in ipairs(allclients) do
-            if allclients[i+1] then
-                allclients[i+1]:swap(v)
-            end
-        end
-        awful.client.focus.byidx(-1)
+    awful.key({ settings.modkey, 'Shift'   }, 'j',    function () awful.client.swap.byidx(1) end),
+    awful.key({ settings.modkey, 'Shift'   }, 'k',    function () awful.client.swap.byidx(-1) end),
+    awful.key({ settings.modkey, 'Control' }, 'j',    function () awful.screen.focus_relative(1) end),
+    awful.key({ settings.modkey, 'Control' }, 'k',    function () awful.screen.focus_relative(-1) end),
+    awful.key({ settings.modkey,           }, 'u',    awful.client.urgent.jumpto),
+    awful.key({ settings.modkey,           }, 'Tab',  function ()
+        awful.client.focus.history.previous()
+        if client.focus then client.focus:raise() end
     end),
     awful.key({ settings.modkey            }, 'l',     function () awful.tag.incmwfact(0.025) end),
     awful.key({ settings.modkey            }, 'h',     function () awful.tag.incmwfact(-0.025) end),
@@ -179,39 +154,45 @@ local globalkeys = awful.util.table.join(
 )
 
 local clientkeys = awful.util.table.join(
-    awful.key({ settings.modkey            }, "c",     function (c) c:kill() end),
-    awful.key({ settings.modkey, "Control" }, "space", awful.client.floating.toggle),
-    awful.key({ settings.modkey, "Shift"   }, "r",     function (c) c:redraw() end),
-    awful.key({ settings.modkey            }, "t",     awful.client.togglemarked),
-    awful.key({ settings.modkey            }, "m",     function (c)
+    awful.key({ settings.modkey            }, 'c',     function (c) c:kill() end),
+    awful.key({ settings.modkey, 'Control' }, 'space', awful.client.floating.toggle),
+    awful.key({ settings.modkey, 'Shift'   }, 'r',     function (c) c:redraw() end),
+    awful.key({ settings.modkey            }, 't',     awful.client.togglemarked),
+    awful.key({ settings.modkey            }, 'm',     function (c)
         c.maximized_horizontal = not c.maximized_horizontal
         c.maximized_vertical   = not c.maximized_vertical
     end)
 )
 
--- Using keynumbers instead of 1->9 because of my stupid azerty keyboard
-local key_list = { '#10', '#11', '#12', '#13', '#14', '#15', '#16', '#17', '#18' }
-local keynumber = table.getn(key_list)
+-- Compute the maximum number of digit we need, limited to 9
+keynumber = 0
+for s = 1, screen.count() do
+   keynumber = math.min(9, math.max(#tags[s], keynumber));
+end
+
+-- Bind all key numbers to tags.
+-- Be careful: we use keycodes to make it works on any keyboard layout.
+-- This should map on the top row of your keyboard, usually 1 to 9.
 for i = 1, keynumber do
     globalkeys = awful.util.table.join(globalkeys,
-        awful.key({ settings.modkey }, key_list[i], function ()
+        awful.key({ settings.modkey }, '#' .. i + 9, function ()
             local screen = mouse.screen
             if tags[screen][i] then
                 awful.tag.viewonly(tags[screen][i])
             end
         end),
-        awful.key({ settings.modkey, 'Control' }, key_list[i], function ()
+        awful.key({ settings.modkey, 'Control' }, '#' .. i + 9, function ()
             local screen = mouse.screen
             if tags[screen][i] then
-                tags[screen][i].selected = not tags[screen][i].selected
+                awful.tag.viewtoggle(tags[screen][i])
             end
         end),
-        awful.key({ settings.modkey, 'Shift'   }, key_list[i], function ()
+        awful.key({ settings.modkey, 'Shift' }, '#' .. i + 9, function ()
             if client.focus and tags[client.focus.screen][i] then
                 awful.client.movetotag(tags[client.focus.screen][i])
             end
         end),
-        awful.key({ settings.modkey, 'Control', 'Shift' }, key_list[i], function ()
+        awful.key({ settings.modkey, 'Control', 'Shift' }, '#' .. i + 9, function ()
             if client.focus and tags[client.focus.screen][i] then
                 awful.client.toggletag(tags[client.focus.screen][i])
             end
@@ -219,123 +200,121 @@ for i = 1, keynumber do
     )
 end
 
+local clientbuttons = awful.util.table.join(
+    awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
+    awful.button({ settings.modkey }, 1, awful.mouse.client.move),
+    awful.button({ settings.modkey }, 3, awful.mouse.client.resize)
+)
+
 root.keys(globalkeys)
 
--- {{{1 Hooks
+-- {{{1 Rules
 
--- Gets executed when focusing a client
-awful.hooks.focus.register(function (c)
-    if not awful.client.ismarked(c) then
-        c.border_color = beautiful.border_focus
-    end
-end)
+awful.rules.rules =
+{
+    { rule = { },
+      properties = { border_width = beautiful.border_width,
+                     border_color = beautiful.border_normal,
+                     focus = true,
+                     keys = clientkeys,
+                     buttons = clientbuttons } },
+    { rule = { class = 'MPlayer' },
+      properties = { floating = true } },
+    { rule = { class = 'gimp' },
+      properties = { floating = true } },
+    { rule = { class = 'opera' },
+      properties = { tag = tags[1][2] } },
+    { rule = { class = 'pidgin' },
+      properties = { tag = tags[1][4] } }
+}
 
--- Gets executed when unfocusing a client
-awful.hooks.unfocus.register(function (c)
-    if not awful.client.ismarked(c) then
-        c.border_color = beautiful.border_normal
-    end
-end)
+-- {{{1 Signals
 
--- Gets executed when marking a client
-awful.hooks.marked.register(function (c)
-    c.border_color = beautiful.border_marked
-end)
-
--- Gets executed when unmarking a client
-awful.hooks.unmarked.register(function (c)
-    c.border_color = beautiful.border_focus
-end)
-
--- Gets executed when the mouse enters a client
-awful.hooks.mouse_enter.register(function (c)
-    if awful.client.focus.filter(c)
-    and awful.layout.get(c.screen) ~= awful.layout.suit.magnifier then
-        client.focus = c
-    end
-end)
-
--- Gets executed when a new client appears
-awful.hooks.manage.register(function (c)
-    if not startup and awful.client.focus.filter(c) then
-        c.screen = mouse.screen
-    end
-
-    c:buttons(awful.util.table.join(
-        awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
-        awful.button({ settings.modkey }, 1, awful.mouse.client.move),
-        awful.button({ settings.modkey }, 3, awful.mouse.client.resize)
-    ))
-
-    c.border_width = beautiful.border_width
-    c.border_color = beautiful.border_normal
-
-    -- Check application->screen/tag mappings and floating state
-    local target_screen, target_tag, target_float
-    for index, rule in pairs(settings.app_rules) do
-        if  (((rule[1] == nil) or (c.class    and c.class    == rule[1]))
-        and  ((rule[2] == nil) or (c.instance and c.instance == rule[2]))
-        and  ((rule[3] == nil) or (c.name     and string.find(c.name, rule[3], 1, true)))) then
-            target_screen = rule[4]
-            target_tag    = rule[5]
-            target_float  = rule[6]
+client.add_signal('manage', function (c, startup)
+    -- Enable sloppy focus
+    c:add_signal('mouse::enter', function (c)
+        if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+           and awful.client.focus.filter(c) then
+               client.focus = c
         end
-    end
-    -- Apply mappings, if any
-    if target_float  then
-        awful.client.floating.set(c, target_float)
-    end
-    if target_screen then
-        c.screen = target_screen
-        awful.client.movetotag(tags[target_screen][target_tag], c)
+    end)
+
+    if not startup then
+        awful.client.setslave(c)
+        awful.placement.no_overlap(c)
+        awful.placement.no_offscreen(c)
     end
 
-    client.focus = c
-
-    c:keys(clientkeys)
-
-    -- Prevent new clients from becoming master
-    awful.client.setslave(c)
-
-    awful.placement.no_overlap(c)
-    awful.placement.no_offscreen(c)
-
-    -- Ignore size hints usually given out by terminals (prevent gaps between windows)
     c.size_hints_honor = false
 end)
 
--- Gets executed when arranging the screen (as in, tag switch, new client, etc)
-awful.hooks.tags.register(function (screen)
-    if not client.focus or not client.focus:isvisible() then
-        local c = awful.client.focus.history.get(screen, 0)
-        if c then client.focus = c end
+client.add_signal('focus', function(c) c.border_color = beautiful.border_focus end)
+client.add_signal('unfocus', function(c) c.border_color = beautiful.border_normal end)
+
+-- {{{1 Functions
+
+function battery(id)
+    -- Ugly long HAL string
+    hal = io.popen('hal-get-property --udi /org/freedesktop/Hal/devices/computer_power_supply_battery_'..id..' --key battery.charge_level.percentage')
+    if hal then
+        charge = hal:read('*all')
+        hal:close()
     end
-end)
+    
+    return charge:gsub("\n", '')..'%'.. ' |'
+end
 
--- Runonce
-functions.cpu(cpubox)
-functions.loadavg(loadbox)
-functions.memory(membox)
-functions.battery(batbox, 'BAT1')
-functions.clock(clockbox, '%B %d %H:%M')
-functions.volume(volbox, 'Master')
+function memory()
+    local memfile = io.open('/proc/meminfo')
+    if memfile then
+        for line in memfile:lines() do
+            if line:match("^MemTotal.*") then
+                mem_total = math.floor(tonumber(line:match("(%d+)")) / 1024)
+            elseif line:match("^MemFree.*") then
+                mem_free = math.floor(tonumber(line:match("(%d+)")) / 1024)
+            elseif line:match("^Buffers.*") then
+                mem_buffers = math.floor(tonumber(line:match("(%d+)")) / 1024)
+            elseif line:match("^Cached.*") then
+                mem_cached = math.floor(tonumber(line:match("(%d+)")) / 1024)
+            end
+        end
+        memfile:close()
+    end
+    local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
+    local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
 
--- 10 seconds
-awful.hooks.timer.register(10, function ()
-    functions.cpu(cpubox)
-    functions.loadavg(loadbox)
-end)
+    return mem_in_use..'Mb'..' | '
+end
 
--- 20 seconds
-awful.hooks.timer.register(20, function ()
-    functions.memory(membox)
-    functions.battery(batbox, 'BAT1')
-    functions.volume(volbox, 'Master')
-end)
+function thermal()
+    local temperature, howmany = 0, 0
+    local sensors = io.popen('sensors')
+    if sensors then
+        for line in sensors:lines() do
+            if line:match(':%s+%+([.%d]+)') then
+                howmany = howmany + 1
+                temperature = temperature + tonumber(line:match(':%s+%+([.%d]+)'))
+            end
+        end
+        sensors:close()
+    end
+    temperature = temperature / howmany
 
--- 1 minute
-awful.hooks.timer.register(60, function ()
-    functions.clock(clockbox, '%B %d %H:%M')
-end)
+    return temperature..'°C'..' | '
+end
 
-io.stderr:write("\n\rAwesome loaded at "..os.date("%B %d, %H:%M").."\r\n\n")
+-- {{{1 Timers
+
+battimer = timer { timeout = 30 }
+battimer:add_signal('timeout', function() batwidget.text = battery('BAT1') end)
+battimer:start()
+
+memtimer = timer { timeout = 15 }
+memtimer:add_signal('timeout', function() memwidget.text = memory() end)
+memtimer:start()
+
+thermaltimer = timer { timeout = 10 }
+thermaltimer:add_signal('timeout', function() thermalwidget.text = thermal() end)
+thermaltimer:start()
+
+io.stderr:write("\n\rAwesome loaded at "..os.date('%B %d, %H:%M').."\r\n\n")

@@ -31,7 +31,7 @@ function set_font(font, text)
 end
 
 local separator_l = ' '
-local separator_r = ' '
+local separator_r = '| '
 
 -- {{{1 Util
 
@@ -99,6 +99,7 @@ function memory(widget)
                 mem_cached = math.floor(tonumber(line:match("(%d+)")) / 1024)
             end
         end
+        memfile:close()
     end
     local mem_in_use = mem_total - (mem_free + mem_buffers + mem_cached)
     local mem_usage_percentage = math.floor(mem_in_use / mem_total * 100)
@@ -161,7 +162,7 @@ function volume(widget, mixer)
     local vol = ''
     local txt = pread('amixer get '..mixer)
     if txt:match('%[off%]') then
-        vol = 'Mute'
+        vol = 'Muted'
     else
         vol = txt:match('%[(%d+%%)%]')
     end
